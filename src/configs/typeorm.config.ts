@@ -11,8 +11,8 @@ export function TypeOrmConfig(): TypeOrmModuleOptions {
     username: DB_USERNAME,
     password: DB_PASSWORD,
     ssl: true,
-    autoLoadEntities: false,
+    autoLoadEntities: true,
     synchronize: true,
-    entities: ['dist/**/**/*.entity{.ts, .js}', 'dist/**/*.entity{.ts, .js}'],
+    entities: [__dirname + '/../**/*.entity{.ts, .js}'],
   };
 }
