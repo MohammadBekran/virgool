@@ -1,8 +1,8 @@
 import { BaseEntity } from 'src/common/abstracts/base.entity';
-import { EntityName } from 'src/common/enums/entity.enum';
+import { EEntityName } from 'src/common/enums/entity.enum';
 import { Column, Entity } from 'typeorm';
 
-@Entity(EntityName.Profile)
+@Entity(EEntityName.Profile)
 export class ProfileEntity extends BaseEntity {
   @Column()
   nick_name: string;
