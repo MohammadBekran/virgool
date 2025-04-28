@@ -190,6 +190,18 @@ export class AuthService {
 
     return user;
   }
+  async validateAccessToken(token: string) {
+    const { userId } = this.tokensService.verifyOTPToken(
+      token,
+      process.env.ACCESS_TOKEN_SECRET,
+      EAuthMessages.LoginAgain,
+    );
+
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) throw new UnauthorizedException(EAuthMessages.LoginAgain);
+
+    return user;
+  }
   sendResponseCookie(res: Response, result: TAuthResponse) {
     const { token, code } = result;
 

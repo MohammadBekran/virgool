@@ -13,6 +13,7 @@ export enum EAuthMessages {
   CodeExpired = 'Code has been expired',
   TryAgain = 'Try again',
   LoginAgain = 'Login again',
+  Login = 'Login to your account',
 }
 
 export enum ENotFoundMessages {
