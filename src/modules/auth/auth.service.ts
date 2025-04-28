@@ -1,41 +1,58 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
+  Scope,
   UnauthorizedException,
 } from '@nestjs/common';
-import { AuthDto } from './dto/auth.dto';
-import { EAuthType } from './enums/type.enum';
-import { EAuthMethod } from './enums/method.enum';
-import { isEmail, isMobilePhone } from 'class-validator';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserEntity } from '../user/entities/user.entity';
+import { isEmail, isMobilePhone } from 'class-validator';
+import { randomInt } from 'crypto';
+import { REQUEST } from '@nestjs/core';
+import type { Request, Response } from 'express';
 import { Repository } from 'typeorm';
+
+import { ECookieKeys } from 'src/common/enums/cookie.enum';
 import {
   EAuthMessages,
   EBadRequestMessages,
   EConflictMessages,
   ENotFoundMessages,
+  EPublicMessages,
 } from 'src/common/enums/messages.enum';
-import { randomInt } from 'crypto';
-import { OTPEntity } from '../user/entities/otp.entity';
 
-@Injectable()
+import { OTPEntity } from '../user/entities/otp.entity';
+import { UserEntity } from '../user/entities/user.entity';
+import { AuthDto } from './dto/auth.dto';
+import { EAuthMethod } from './enums/method.enum';
+import { EAuthType } from './enums/type.enum';
+import { TokensService } from './tokens.service';
+import type { TAuthResponse } from './types/response.type';
+
+@Injectable({ scope: Scope.REQUEST })
 export class AuthService {
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
     @InjectRepository(OTPEntity) private otpRepository: Repository<OTPEntity>,
+    @Inject(REQUEST) private request: Request,
+    private tokensService: TokensService,
   ) {}
 
-  async userExistence(authDto: AuthDto) {
+  async userExistence(authDto: AuthDto, res: Response) {
     const { type, method, username } = authDto;
 
+    let result: TAuthResponse;
     switch (type) {
       case EAuthType.Login:
-        return this.login(method, username);
+        result = await this.login(method, username);
+
+        return this.sendResponseCookie(res, result);
       case EAuthType.Register:
-        return this.register(method, username);
+        result = await this.register(method, username);
+
+        return this.sendResponseCookie(res, result);
       default:
         throw new UnauthorizedException(EAuthMessages.InvalidMethod);
     }
@@ -47,8 +64,16 @@ export class AuthService {
 
     const otp = await this.saveOTP(user.id);
 
+    const token = this.tokensService.generateToken(
+      { userId: user.id },
+      process.env.OTP_TOKEN_SECRET,
+      60 * 2,
+    );
+
     return {
+      message: EPublicMessages.OTPSentSuccessfully,
       code: otp.code,
+      token,
     };
   }
   async register(method: EAuthMethod, username: string) {
@@ -68,8 +93,16 @@ export class AuthService {
 
     const otp = await this.saveOTP(user.id);
 
+    const token = this.tokensService.generateToken(
+      { userId: user.id },
+      process.env.OTP_TOKEN_SECRET,
+      60 * 2,
+    );
+
     return {
+      message: EPublicMessages.OTPSentSuccessfully,
       code: otp.code,
+      token,
     };
   }
   async saveOTP(userId: string) {
@@ -108,7 +141,37 @@ export class AuthService {
 
     return otp;
   }
-  async checkOTP() {}
+  async checkOTP(code: string) {
+    const token = this.request.cookies?.[ECookieKeys.OTP];
+    if (!token) throw new UnauthorizedException(EAuthMessages.CodeExpired);
+
+    const { userId } = this.tokensService.verifyOTPToken(
+      token,
+      process.env.OTP_TOKEN_SECRET,
+    );
+
+    const otp = await this.otpRepository.findOneBy({ userId });
+    if (!otp) throw new UnauthorizedException(EAuthMessages.LoginAgain);
+
+    const now = new Date();
+    if (otp.expiresIn < now) {
+      throw new UnauthorizedException(EAuthMessages.CodeExpired);
+    }
+    if (otp.code !== code) {
+      throw new UnauthorizedException(EAuthMessages.TryAgain);
+    }
+
+    const accessToken = this.tokensService.generateToken(
+      { userId },
+      process.env.ACCESS_TOKEN_SECRET,
+      '1y',
+    );
+
+    return {
+      message: EPublicMessages.LoggedInSuccessfully,
+      accessToken,
+    };
+  }
   async checkUserExistence(method: EAuthMethod, username: string) {
     let user: UserEntity | UserEntity[] | null;
     user = await this.userRepository.find();
@@ -126,6 +189,20 @@ export class AuthService {
     }
 
     return user;
+  }
+  sendResponseCookie(res: Response, result: TAuthResponse) {
+    const { token, code } = result;
+
+    res.cookie(ECookieKeys.OTP, result.token, {
+      httpOnly: true,
+      expires: new Date(Date.now() + 1000 * 60 * 2),
+    });
+
+    return res.json({
+      message: EPublicMessages.OTPSentSuccessfully,
+      code,
+      token,
+    });
   }
   validateUsername(method: EAuthMethod, username: string) {
     switch (method) {

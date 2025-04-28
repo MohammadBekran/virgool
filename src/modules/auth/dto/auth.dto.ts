@@ -15,3 +15,10 @@ export class AuthDto {
   @Length(3, 100)
   username: string;
 }
+
+export class OTPDto {
+  @ApiProperty()
+  @IsString()
+  @Length(5, 5)
+  code: string;
+}
