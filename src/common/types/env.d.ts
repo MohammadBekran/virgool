@@ -1,7 +1,9 @@
 namespace NodeJS {
   interface ProcessEnv {
-    // DB
+    // Global
+    URL: string;
     PORT: number;
+    // DB
     DB_HOST: string;
     DB_NAME: string;
     DB_PORT: string;

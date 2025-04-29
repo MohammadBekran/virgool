@@ -1,3 +1,5 @@
+import { MULTER_WHILE_LIST_FORMAT } from '../constants/multer.constant';
+
 export enum EPublicMessages {
   OTPSentSuccessfully = 'OTP has been sent successfully',
   LoggedInSuccessfully = 'Logged in successfully',
@@ -29,4 +31,8 @@ export enum ENotFoundMessages {
 export enum EConflictMessages {
   UserAlreadyExists = 'User already exists',
   CategoryAlreadyExists = 'Category with this title already exists',
+}
+
+export enum EValidationMessages {
+  InvalidImageFormat = `Format doesn't support. Supported format are png, jpg, jpeg and webp.`,
 }

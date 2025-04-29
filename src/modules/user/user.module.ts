@@ -6,9 +6,13 @@ import { ProfileEntity } from './entities/profile.entity';
 import { UserEntity } from './entities/user.entity';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity, ProfileEntity, OTPEntity])],
+  imports: [
+    TypeOrmModule.forFeature([UserEntity, ProfileEntity, OTPEntity]),
+    AuthModule,
+  ],
   controllers: [UserController],
   providers: [UserService],
   exports: [UserService, TypeOrmModule],

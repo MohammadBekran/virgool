@@ -10,6 +10,7 @@ import {
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 
+import { API_BEARER_AUTH } from 'src/common/constants/bearer-auth.constant';
 import { EAPITagsName } from 'src/common/enums/api-tag.enum';
 import { EControllersName } from 'src/common/enums/controller.enum';
 import { ESwaggerConsumes } from 'src/common/enums/swagger-consumes.enum';
@@ -36,7 +37,7 @@ export class AuthController {
   }
 
   @Get('check-login')
-  @ApiBearerAuth('Authorization')
+  @ApiBearerAuth(API_BEARER_AUTH)
   @UseGuards(AuthGuard)
   checkLogin(@Req() req: Request) {
     return req.user;

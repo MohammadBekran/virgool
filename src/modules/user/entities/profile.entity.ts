@@ -1,6 +1,9 @@
+import { Column, Entity, OneToOne } from 'typeorm';
+
 import { BaseEntity } from 'src/common/abstracts/base.entity';
 import { EEntityName } from 'src/common/enums/entity.enum';
-import { Column, Entity } from 'typeorm';
+
+import { UserEntity } from './user.entity';
 
 @Entity(EEntityName.Profile)
 export class ProfileEntity extends BaseEntity {
@@ -20,4 +23,8 @@ export class ProfileEntity extends BaseEntity {
   linkedin_profile: string;
   @Column({ nullable: true })
   x_profile: string;
+  @Column()
+  userId: string;
+  @OneToOne(() => UserEntity, (user) => user.profile, { onDelete: 'CASCADE' })
+  user: UserEntity;
 }
