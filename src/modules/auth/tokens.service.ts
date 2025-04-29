@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
-import { EAuthMessages } from 'src/common/enums/messages.enum';
+import { EAuthMessages } from 'src/common/enums/message.enum';
 
 import type { TCookiePayload } from './types/payload.type';
 

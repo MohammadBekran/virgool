@@ -20,7 +20,7 @@ import {
   EConflictMessages,
   ENotFoundMessages,
   EPublicMessages,
-} from 'src/common/enums/messages.enum';
+} from 'src/common/enums/message.enum';
 
 import { OTPEntity } from '../user/entities/otp.entity';
 import { UserEntity } from '../user/entities/user.entity';

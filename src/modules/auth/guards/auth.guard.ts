@@ -7,7 +7,7 @@ import {
 import { isJWT } from 'class-validator';
 import type { Request } from 'express';
 
-import { EAuthMessages } from 'src/common/enums/messages.enum';
+import { EAuthMessages } from 'src/common/enums/message.enum';
 
 import { AuthService } from '../auth.service';
 
