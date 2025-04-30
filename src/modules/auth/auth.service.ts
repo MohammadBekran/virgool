@@ -6,10 +6,10 @@ import {
   Scope,
   UnauthorizedException,
 } from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { isEmail, isMobilePhone } from 'class-validator';
 import { randomInt } from 'crypto';
-import { REQUEST } from '@nestjs/core';
 import type { Request, Response } from 'express';
 import { Repository } from 'typeorm';
 
@@ -21,6 +21,8 @@ import {
   ENotFoundMessages,
   EPublicMessages,
 } from 'src/common/enums/message.enum';
+import { checkOTPValidation } from 'src/common/utils/check-otp.util';
+import { CookieOptions } from 'src/common/utils/cookie.util';
 
 import { OTPEntity } from '../user/entities/otp.entity';
 import { UserEntity } from '../user/entities/user.entity';
@@ -28,6 +30,7 @@ import { AuthDto } from './dto/auth.dto';
 import { EAuthMethod } from './enums/method.enum';
 import { EAuthType } from './enums/type.enum';
 import { TokensService } from './tokens.service';
+import type { TCookiePayload } from './types/payload.type';
 import type { TAuthResponse } from './types/response.type';
 
 @Injectable({ scope: Scope.REQUEST })
@@ -62,7 +65,7 @@ export class AuthService {
     const user = await this.checkUserExistence(method, validatedUsername);
     if (!user) throw new UnauthorizedException(EAuthMessages.UserNotFound);
 
-    const otp = await this.saveOTP(user.id);
+    const otp = await this.saveOTP(user.id, method);
 
     const token = this.tokensService.generateToken(
       { userId: user.id },
@@ -91,7 +94,7 @@ export class AuthService {
     user.username = `m_${user.id}`;
     await this.userRepository.save(user);
 
-    const otp = await this.saveOTP(user.id);
+    const otp = await this.saveOTP(user.id, method);
 
     const token = this.tokensService.generateToken(
       { userId: user.id },
@@ -105,7 +108,7 @@ export class AuthService {
       token,
     };
   }
-  async saveOTP(userId: string) {
+  async saveOTP(userId: string, method: EAuthMethod) {
     const code = randomInt(10000, 99999).toString();
     const expiresIn = new Date(Date.now() + 1000 * 60 * 2);
     let isOtpExists = false;
@@ -118,11 +121,13 @@ export class AuthService {
 
       otp.code = code;
       otp.expiresIn = expiresIn;
+      otp.method = method;
     } else {
       otp = this.otpRepository.create({
         code,
         expiresIn,
         userId,
+        method,
       });
     }
 
@@ -145,27 +150,34 @@ export class AuthService {
     const token = this.request.cookies?.[ECookieKeys.OTP];
     if (!token) throw new UnauthorizedException(EAuthMessages.CodeExpired);
 
-    const { userId } = this.tokensService.verifyOTPToken(
+    const { userId } = this.tokensService.verifyOTPToken<TCookiePayload>(
       token,
       process.env.OTP_TOKEN_SECRET,
     );
 
-    const otp = await this.otpRepository.findOneBy({ userId });
-    if (!otp) throw new UnauthorizedException(EAuthMessages.LoginAgain);
-
-    const now = new Date();
-    if (otp.expiresIn < now) {
-      throw new UnauthorizedException(EAuthMessages.CodeExpired);
-    }
-    if (otp.code !== code) {
-      throw new UnauthorizedException(EAuthMessages.TryAgain);
-    }
+    const otp = await checkOTPValidation(this.otpRepository, userId, code);
 
     const accessToken = this.tokensService.generateToken(
       { userId },
       process.env.ACCESS_TOKEN_SECRET,
       '1y',
     );
+
+    if (otp.method === EAuthMethod.Email) {
+      await this.userRepository.update(
+        { id: userId },
+        {
+          is_email_verified: true,
+        },
+      );
+    } else if (otp.method === EAuthMethod.Phone) {
+      await this.userRepository.update(
+        { id: userId },
+        {
+          is_mobile_verified: true,
+        },
+      );
+    }
 
     return {
       message: EPublicMessages.LoggedInSuccessfully,
@@ -191,7 +203,7 @@ export class AuthService {
     return user;
   }
   async validateAccessToken(token: string) {
-    const { userId } = this.tokensService.verifyOTPToken(
+    const { userId } = this.tokensService.verifyOTPToken<TCookiePayload>(
       token,
       process.env.ACCESS_TOKEN_SECRET,
       EAuthMessages.LoginAgain,
@@ -203,17 +215,13 @@ export class AuthService {
     return user;
   }
   sendResponseCookie(res: Response, result: TAuthResponse) {
-    const { token, code } = result;
+    const { code } = result;
 
-    res.cookie(ECookieKeys.OTP, result.token, {
-      httpOnly: true,
-      expires: new Date(Date.now() + 1000 * 60 * 2),
-    });
+    res.cookie(ECookieKeys.OTP, result.token, CookieOptions());
 
     return res.json({
       message: EPublicMessages.OTPSentSuccessfully,
       code,
-      token,
     });
   }
   validateUsername(method: EAuthMethod, username: string) {

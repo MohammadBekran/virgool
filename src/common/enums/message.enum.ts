@@ -10,6 +10,7 @@ export enum EPublicMessages {
 
 export enum EBadRequestMessages {
   RegisterUsernameExists = 'You cannot set your username directly',
+  SomethingWentWrong = 'Something went wrong',
 }
 
 export enum EAuthMessages {
@@ -31,8 +32,11 @@ export enum ENotFoundMessages {
 export enum EConflictMessages {
   UserAlreadyExists = 'User already exists',
   CategoryAlreadyExists = 'Category with this title already exists',
+  EmailUsed = 'This email has been used before',
 }
 
 export enum EValidationMessages {
   InvalidImageFormat = `Format doesn't support. Supported format are png, jpg, jpeg and webp.`,
+  InvalidEmail = 'Invalid email',
+  InvalidPhone = 'Invalid phone',
 }

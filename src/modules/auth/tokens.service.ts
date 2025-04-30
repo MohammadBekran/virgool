@@ -2,15 +2,14 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { EAuthMessages } from 'src/common/enums/message.enum';
-
-import type { TCookiePayload } from './types/payload.type';
+import type { TExceptionConstructor } from 'src/common/types/exception-constructor.type';
 
 @Injectable()
 export class TokensService {
   constructor(private jwtService: JwtService) {}
 
-  generateToken(
-    payload: TCookiePayload,
+  generateToken<T extends object>(
+    payload: T,
     secret: string,
     expiresIn: string | number,
   ) {
@@ -21,11 +20,13 @@ export class TokensService {
 
     return token;
   }
-  verifyOTPToken(
+
+  verifyOTPToken<T extends object>(
     token: string,
     secret: string,
     message: string = EAuthMessages.TryAgain,
-  ): TCookiePayload {
+    ExceptionClass: TExceptionConstructor = UnauthorizedException,
+  ): T {
     try {
       const payload = this.jwtService.verify(token, {
         secret,
@@ -33,7 +34,7 @@ export class TokensService {
 
       return payload;
     } catch (error) {
-      throw new UnauthorizedException(message);
+      throw new ExceptionClass(message);
     }
   }
 }
