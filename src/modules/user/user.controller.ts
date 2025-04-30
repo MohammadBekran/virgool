@@ -26,7 +26,12 @@ import { multerStorage } from 'src/common/utils/multer.util';
 import { UploadFile } from 'src/common/decorators/upload-file.decorator';
 import { OTPDto } from '../auth/dto/auth.dto';
 import { AuthGuard } from '../auth/guards/auth.guard';
-import { ChangeEmailDto, ChangePhoneDto, ProfileDto } from './dto/profile.dto';
+import {
+  ChangeEmailDto,
+  ChangePhoneDto,
+  ChangeUsernameDto,
+  ProfileDto,
+} from './dto/profile.dto';
 import type { TProfileImages } from './types/file.type';
 import { UserService } from './user.service';
 
@@ -115,5 +120,11 @@ export class UserController {
   @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
   verifyPhone(@Body() otpDto: OTPDto) {
     return this.userService.verifyPhone(otpDto.code);
+  }
+
+  @Patch(EEndpointKeys.PatchChangeUsername)
+  @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
+  async changeUsername(@Body() usernameDto: ChangeUsernameDto) {
+    return this.userService.changeUsername(usernameDto.username);
   }
 }

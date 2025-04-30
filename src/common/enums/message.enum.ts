@@ -33,6 +33,8 @@ export enum EConflictMessages {
   UserAlreadyExists = 'User already exists',
   CategoryAlreadyExists = 'Category with this title already exists',
   EmailUsed = 'This email has been used before',
+  PhoneUsed = 'This phone has been used before',
+  UsernameUsed = 'This username has been used before',
 }
 
 export enum EValidationMessages {

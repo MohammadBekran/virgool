@@ -10,6 +10,7 @@ export enum EEndpointKeys {
   PostVerifyEmail = 'verify-email-otp',
   PatchChangePhone = 'change-phone',
   PostVerifyPhone = 'verify-phone',
+  PatchChangeUsername = 'change-username',
   // Category
   PostCreateCategory = '',
   GetFindAllCategories = '',

@@ -193,7 +193,7 @@ export class UserService {
     const user = await this.userRepository.findOneBy({ phone });
 
     if (user && user.id !== id) {
-      throw new ConflictException(EConflictMessages.EmailUsed);
+      throw new ConflictException(EConflictMessages.PhoneUsed);
     } else if (user && user.id === id) {
       return {
         message: EPublicMessages.UpdatedSuccessfully,
@@ -245,6 +245,25 @@ export class UserService {
       { id: userId },
       { phone, is_phone_verified: true, new_phone: null },
     );
+
+    return {
+      message: EPublicMessages.UpdatedSuccessfully,
+    };
+  }
+
+  async changeUsername(username: string) {
+    const { id } = this.request.user;
+    const user = await this.userRepository.findOneBy({ username });
+
+    if (user && user.id !== id) {
+      throw new ConflictException(EConflictMessages.UsernameUsed);
+    } else if (user && user.id === id) {
+      return {
+        message: EPublicMessages.UpdatedSuccessfully,
+      };
+    }
+
+    await this.userRepository.update({ id }, { username });
 
     return {
       message: EPublicMessages.UpdatedSuccessfully,
