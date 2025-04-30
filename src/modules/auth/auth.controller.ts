@@ -13,6 +13,7 @@ import type { Request, Response } from 'express';
 import { API_BEARER_AUTH } from 'src/common/constants/bearer-auth.constant';
 import { EAPITagsName } from 'src/common/enums/api-tag.enum';
 import { EControllersName } from 'src/common/enums/controller.enum';
+import { EEndpointKeys } from 'src/common/enums/endpoint-key.enum';
 import { ESwaggerConsumes } from 'src/common/enums/swagger-consumes.enum';
 
 import { AuthService } from './auth.service';
@@ -24,19 +25,19 @@ import { AuthGuard } from './guards/auth.guard';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('user-existence')
+  @Post(EEndpointKeys.PostUserExistence)
   @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
   userExistence(@Body() authDto: AuthDto, @Res() res: Response) {
     return this.authService.userExistence(authDto, res);
   }
 
-  @Post('check-otp')
+  @Post(EEndpointKeys.PostCheckOTP)
   @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
   checkOTP(@Body() otpDto: OTPDto) {
     return this.authService.checkOTP(otpDto.code);
   }
 
-  @Get('check-login')
+  @Get(EEndpointKeys.GetCheckLogin)
   @ApiBearerAuth(API_BEARER_AUTH)
   @UseGuards(AuthGuard)
   checkLogin(@Req() req: Request) {

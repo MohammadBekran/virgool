@@ -33,5 +33,5 @@ export class ChangeEmailDto {
 export class ChangePhoneDto {
   @ApiProperty()
   @IsMobilePhone('fa-IR', {}, { message: EValidationMessages.InvalidPhone })
-  email: string;
+  phone: string;
 }

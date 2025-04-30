@@ -174,7 +174,7 @@ export class AuthService {
       await this.userRepository.update(
         { id: userId },
         {
-          is_mobile_verified: true,
+          is_phone_verified: true,
         },
       );
     }

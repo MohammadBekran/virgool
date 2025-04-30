@@ -8,13 +8,14 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 
+import { Pagination } from 'src/common/decorators/pagination.decorator';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { EAPITagsName } from 'src/common/enums/api-tag.enum';
 import { EControllersName } from 'src/common/enums/controller.enum';
+import { EEndpointKeys } from 'src/common/enums/endpoint-key.enum';
 import { ESwaggerConsumes } from 'src/common/enums/swagger-consumes.enum';
-import { PaginationDto } from 'src/common/dtos/pagination.dto';
-import { Pagination } from 'src/common/decorators/pagination.decorator';
 
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -25,24 +26,24 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
-  @Post()
+  @Post(EEndpointKeys.PostCreateCategory)
   @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
   create(@Body() createCategoryDto: CreateCategoryDto) {
     return this.categoryService.create(createCategoryDto);
   }
 
-  @Get()
+  @Get(EEndpointKeys.GetFindAllCategories)
   @Pagination()
   findAll(@Query() paginationDto: PaginationDto) {
     return this.categoryService.findAll(paginationDto);
   }
 
-  @Get(':id')
+  @Get(EEndpointKeys.GetFindOneCategory)
   findOne(@Param('id') id: string) {
     return this.categoryService.findOne(id);
   }
 
-  @Patch(':id')
+  @Patch(EEndpointKeys.PatchUpdateCategory)
   @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
   update(
     @Param('id') id: string,
@@ -51,7 +52,7 @@ export class CategoryController {
     return this.categoryService.update(id, updateCategoryDto);
   }
 
-  @Delete(':id')
+  @Delete(EEndpointKeys.DeleteRemoveCategory)
   remove(@Param('id') id: string) {
     return this.categoryService.remove(id);
   }

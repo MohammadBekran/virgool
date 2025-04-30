@@ -3,7 +3,6 @@ import {
   ConflictException,
   Inject,
   Injectable,
-  NotFoundException,
   Scope,
 } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
@@ -16,13 +15,13 @@ import {
   EAuthMessages,
   EBadRequestMessages,
   EConflictMessages,
-  ENotFoundMessages,
   EPublicMessages,
 } from 'src/common/enums/message.enum';
 
 import { ECookieKeys } from 'src/common/enums/cookie.enum';
 import { checkOTPValidation } from 'src/common/utils/check-otp.util';
 import { AuthService } from '../auth/auth.service';
+import { EAuthMethod } from '../auth/enums/method.enum';
 import { TokensService } from '../auth/tokens.service';
 import { ProfileDto } from './dto/profile.dto';
 import { OTPEntity } from './entities/otp.entity';
@@ -30,8 +29,10 @@ import { ProfileEntity } from './entities/profile.entity';
 import { UserEntity } from './entities/user.entity';
 import { EGender } from './enums/gender.enum';
 import type { TProfileImages } from './types/file.type';
-import type { TEmailTokenPayload } from './types/payload.type';
-import { EAuthMethod } from '../auth/enums/method.enum';
+import type {
+  TEmailTokenPayload,
+  TPhoneTokenPayload,
+} from './types/payload.type';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserService {
@@ -180,6 +181,69 @@ export class UserService {
     await this.userRepository.update(
       { id: userId },
       { email, is_email_verified: true, new_email: null },
+    );
+
+    return {
+      message: EPublicMessages.UpdatedSuccessfully,
+    };
+  }
+
+  async changePhone(phone: string) {
+    const { id } = this.request.user;
+    const user = await this.userRepository.findOneBy({ phone });
+
+    if (user && user.id !== id) {
+      throw new ConflictException(EConflictMessages.EmailUsed);
+    } else if (user && user.id === id) {
+      return {
+        message: EPublicMessages.UpdatedSuccessfully,
+      };
+    }
+
+    await this.userRepository.update({ id }, { new_phone: phone });
+
+    const otp = await this.authService.saveOTP(id, EAuthMethod.Email);
+    const token = this.tokensService.generateToken<TPhoneTokenPayload>(
+      { phone },
+      process.env.PHONE_TOKEN_SECRET,
+      60 * 2,
+    );
+
+    return {
+      code: otp.code,
+      token,
+    };
+  }
+
+  async verifyPhone(code: string) {
+    const { id: userId, new_phone } = this.request.user;
+
+    const token = this.request.cookies?.[ECookieKeys.PhoneOTP];
+    if (!token) throw new BadRequestException(EAuthMessages.CodeExpired);
+
+    const { phone } = this.tokensService.verifyOTPToken<TPhoneTokenPayload>(
+      token,
+      process.env.PHONE_TOKEN_SECRET,
+      EAuthMessages.TryAgain,
+      BadRequestException,
+    );
+    if (phone !== new_phone) {
+      throw new BadRequestException(EBadRequestMessages.SomethingWentWrong);
+    }
+
+    const otp = await checkOTPValidation(
+      this.otpRepository,
+      userId,
+      code,
+      BadRequestException,
+    );
+    if (otp?.method !== EAuthMethod.Phone) {
+      throw new BadRequestException(EBadRequestMessages.SomethingWentWrong);
+    }
+
+    await this.userRepository.update(
+      { id: userId },
+      { phone, is_phone_verified: true, new_phone: null },
     );
 
     return {
