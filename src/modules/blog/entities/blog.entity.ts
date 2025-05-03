@@ -1,12 +1,18 @@
-import { Column, Entity, OneToMany } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  UpdateDateColumn,
+} from 'typeorm';
 
-import { EEntityName } from 'src/common/enums/entity.enum';
 import { BaseEntity } from 'src/common/abstracts/base.entity';
+import { EEntityName } from 'src/common/enums/entity.enum';
 
-import { BlogLikeEntity } from './like.entity';
+import { BlogCategoryEntity } from './blog-category.entity';
 import { BlogBookmarkEntity } from './bookmark.entity';
 import { BlogCommentEntity } from './comment.entity';
-import { BlogCategoryEntity } from './blog-category.entity';
+import { BlogLikeEntity } from './like.entity';
 
 @Entity(EEntityName.Blog)
 export class BlogEntity extends BaseEntity {
@@ -45,4 +51,10 @@ export class BlogEntity extends BaseEntity {
 
   @OneToMany(() => BlogCategoryEntity, (category) => category.blog)
   categories: BlogCategoryEntity[];
+
+  @CreateDateColumn()
+  created_at: Date;
+
+  @UpdateDateColumn()
+  updated_at: Date;
 }

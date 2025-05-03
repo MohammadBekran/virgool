@@ -29,3 +29,8 @@ export class CreateBlogDto {
   @ApiProperty({ type: String, isArray: true })
   categories: string | string[];
 }
+
+export class FilterBlogDto {
+  category: string;
+  search: string;
+}

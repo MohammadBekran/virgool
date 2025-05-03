@@ -2,6 +2,7 @@ import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 
 import { API_BEARER_AUTH } from 'src/common/constants/bearer-auth.constant';
+import { FilterBlog } from 'src/common/decorators/filter.decorator';
 import { Pagination } from 'src/common/decorators/pagination.decorator';
 import { SkipAuth } from 'src/common/decorators/skip-auth.decorator';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
@@ -12,7 +13,7 @@ import { ESwaggerConsumes } from 'src/common/enums/swagger-consumes.enum';
 
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { BlogService } from './blog.service';
-import { CreateBlogDto } from './dto/blog.dto';
+import { CreateBlogDto, FilterBlogDto } from './dto/blog.dto';
 
 @Controller(EControllersName.Blog)
 @ApiTags(EAPITagsName.Blog)
@@ -35,7 +36,11 @@ export class BlogController {
   @Get(EEndpointKeys.GetBlogs)
   @SkipAuth()
   @Pagination()
-  find(@Query() paginationDto: PaginationDto) {
-    return this.blogService.find(paginationDto);
+  @FilterBlog()
+  find(
+    @Query() paginationDto: PaginationDto,
+    @Query() filterDto: FilterBlogDto,
+  ) {
+    return this.blogService.find(paginationDto, filterDto);
   }
 }

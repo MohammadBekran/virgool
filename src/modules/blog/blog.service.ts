@@ -7,12 +7,13 @@ import slugify from 'slugify';
 import { Repository } from 'typeorm';
 
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
+import { EEntityName } from 'src/common/enums/entity.enum';
 import { EPublicMessages } from 'src/common/enums/message.enum';
 import { generateRandomID } from 'src/common/utils/helper.util';
 import { paginate, paginationData } from 'src/common/utils/pagination.util';
 
 import { CategoryService } from '../category/category.service';
-import { CreateBlogDto } from './dto/blog.dto';
+import { CreateBlogDto, FilterBlogDto } from './dto/blog.dto';
 import { BlogCategoryEntity } from './entities/blog-category.entity';
 import { BlogEntity } from './entities/blog.entity';
 import { EBlogStatus } from './enums/status.enum';
@@ -84,12 +85,38 @@ export class BlogService {
     return blogs;
   }
 
-  async find(paginationDto: PaginationDto) {
+  async find(paginationDto: PaginationDto, filterDto: FilterBlogDto) {
     const { page, limit, skip } = paginate(paginationDto);
+    let { category, search } = filterDto;
 
-    const [blogs, count] = await this.blogRepository.findAndCount({
-      skip,
-    });
+    let where = '';
+
+    if (category) {
+      if (where.length > 0) where += ' AND ';
+      category = category.toLowerCase();
+
+      where += 'LOWER(category.title) = :category';
+    }
+
+    if (search) {
+      if (where.length > 0) where += ' AND ';
+
+      search = `%${search}%`;
+      where +=
+        'CONCAT(blog.title, blog.description, blog.content) ILIKE :search';
+    }
+    console.log(where);
+
+    const [blogs, count] = await this.blogRepository
+      .createQueryBuilder(EEntityName.Blog)
+      .leftJoin('blog.categories', 'categories')
+      .leftJoin('categories.category', 'category')
+      .addSelect(['categories.id', 'category.title'])
+      .orderBy('blog.created_at', 'DESC')
+      .where(where, { category, search })
+      .skip(skip)
+      .limit(limit)
+      .getManyAndCount();
 
     return {
       pagination: paginationData(count, page, limit),
