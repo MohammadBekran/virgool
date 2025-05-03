@@ -19,4 +19,5 @@ export enum EEndpointKeys {
   DeleteRemoveCategory = ':id',
   // Blog
   PostCreateBlog = '',
+  GetMyBlogs = 'my-blogs',
 }

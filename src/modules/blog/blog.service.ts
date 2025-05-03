@@ -46,6 +46,16 @@ export class BlogService {
     };
   }
 
+  async getMyBlogs() {
+    const { id: userId } = this.request.user;
+
+    const blogs = await this.blogRepository.find({
+      where: { authorId: userId },
+    });
+
+    return blogs;
+  }
+
   async checkExistenceBlogBySlug(slug: string) {
     const blog = await this.blogRepository.findOneBy({ slug });
 
