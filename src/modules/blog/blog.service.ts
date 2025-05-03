@@ -1,7 +1,13 @@
-import { Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  Scope,
+} from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
-import { isArray } from 'class-validator';
+import { isArray, isUUID } from 'class-validator';
 import type { Request } from 'express';
 import slugify from 'slugify';
 import { Repository } from 'typeorm';
@@ -9,6 +15,7 @@ import { Repository } from 'typeorm';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { EEntityName } from 'src/common/enums/entity.enum';
 import {
+  EBadRequestMessages,
   ENotFoundMessages,
   EPublicMessages,
 } from 'src/common/enums/message.enum';
@@ -199,18 +206,61 @@ export class BlogService {
     };
   }
 
-  async checkExistenceBlogBySlug(slug: string) {
-    const blog = await this.blogRepository.findOneBy({ slug });
+  async findOneByID(id: string) {
+    const blog = await this.checkExistenceBlogByID(id);
 
     return blog;
   }
 
-  async checkExistenceBlogByID(id: string) {
-    const blog = await this.blogRepository.findOneBy({ id });
+  async findOneBySlug(slug: string) {
+    const blog = await this.checkExistenceBlogBySlug(slug);
     if (!blog) {
       throw new NotFoundException(ENotFoundMessages.NotFound);
     }
 
     return blog;
+  }
+
+  async checkExistenceBlogBySlug(slug: string) {
+    const blog = await this.blogRepository.findOne({
+      where: { slug },
+      ...this.blogRelationSelects(),
+    });
+
+    return blog;
+  }
+
+  async checkExistenceBlogByID(id: string) {
+    if (!isUUID(id)) {
+      throw new BadRequestException(EBadRequestMessages.InvalidID);
+    }
+
+    const blog = await this.blogRepository.findOne({
+      where: { id },
+      ...this.blogRelationSelects(),
+    });
+    if (!blog) {
+      throw new NotFoundException(ENotFoundMessages.NotFound);
+    }
+
+    return blog;
+  }
+
+  blogRelationSelects() {
+    return {
+      relations: {
+        categories: {
+          category: true,
+        },
+      },
+      select: {
+        categories: {
+          id: true,
+          category: {
+            title: true,
+          },
+        },
+      },
+    };
   }
 }

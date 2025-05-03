@@ -11,6 +11,7 @@ export enum EPublicMessages {
 export enum EBadRequestMessages {
   RegisterUsernameExists = 'You cannot set your username directly',
   SomethingWentWrong = 'Something went wrong',
+  InvalidID = 'Invalid id',
 }
 
 export enum EAuthMessages {
