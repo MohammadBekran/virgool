@@ -17,4 +17,6 @@ export enum EEndpointKeys {
   GetFindOneCategory = ':id',
   PatchUpdateCategory = ':id',
   DeleteRemoveCategory = ':id',
+  // Blog
+  PostCreateBlog = '',
 }

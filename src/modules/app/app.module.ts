@@ -6,6 +6,7 @@ import { join } from 'path';
 import { TypeOrmConfig } from 'src/configs/typeorm.config';
 
 import { AuthModule } from '../auth/auth.module';
+import { BlogModule } from '../blog/blog.module';
 import { CategoryModule } from '../category/category.module';
 import { UserModule } from '../user/user.module';
 
@@ -19,6 +20,7 @@ import { UserModule } from '../user/user.module';
     AuthModule,
     UserModule,
     CategoryModule,
+    BlogModule,
   ],
   controllers: [],
   providers: [],

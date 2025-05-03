@@ -7,12 +7,16 @@ import { EEntityName } from 'src/common/enums/entity.enum';
 export class OTPEntity extends BaseEntity {
   @Column()
   code: string;
+
   @Column()
   expiresIn: Date;
+
   @Column()
   method: string;
+
   @Column()
   userId: string;
+
   @OneToOne(() => UserEntity, (user) => user.otp, { onDelete: 'CASCADE' })
   user: UserEntity;
 }
