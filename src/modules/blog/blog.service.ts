@@ -5,12 +5,14 @@ import slugify from 'slugify';
 import { Repository } from 'typeorm';
 
 import { EPublicMessages } from 'src/common/enums/message.enum';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { generateRandomID } from 'src/common/utils/helper.util';
 
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateBlogDto } from './dto/blog.dto';
 import { BlogEntity } from './entities/blog.entity';
 import { EBlogStatus } from './enums/status.enum';
+import { paginate, paginationData } from 'src/common/utils/pagination.util';
 
 @Injectable({ scope: Scope.REQUEST })
 export class BlogService {
@@ -54,6 +56,19 @@ export class BlogService {
     });
 
     return blogs;
+  }
+
+  async find(paginationDto: PaginationDto) {
+    const { page, limit, skip } = paginate(paginationDto);
+
+    const [blogs, count] = await this.blogRepository.findAndCount({
+      skip,
+    });
+
+    return {
+      pagination: paginationData(count, page, limit),
+      blogs,
+    };
   }
 
   async checkExistenceBlogBySlug(slug: string) {

@@ -4,18 +4,29 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { isJWT } from 'class-validator';
 import type { Request } from 'express';
 
+import { SKIP_AUTH } from 'src/common/constants/skip-auth.constant';
 import { EAuthMessages } from 'src/common/enums/message.enum';
 
 import { AuthService } from '../auth.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private reflector: Reflector,
+  ) {}
 
   async canActivate(context: ExecutionContext) {
+    const isSkippedAuthorization = this.reflector.get<boolean>(
+      SKIP_AUTH,
+      context.getHandler(),
+    );
+    if (isSkippedAuthorization) return true;
+
     const request = context.switchToHttp().getRequest<Request>();
 
     const token = this.getUserToken(request);

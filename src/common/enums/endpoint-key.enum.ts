@@ -20,4 +20,5 @@ export enum EEndpointKeys {
   // Blog
   PostCreateBlog = '',
   GetMyBlogs = 'my-blogs',
+  GetBlogs = '',
 }
