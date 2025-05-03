@@ -39,6 +39,14 @@ export class CategoryService {
     };
   }
 
+  async createByTitle(title: string) {
+    const category = this.categoryRepository.create({
+      title,
+    });
+
+    return await this.categoryRepository.save(category);
+  }
+
   async findAll(paginationDto: PaginationDto) {
     const { page, limit, skip } = paginate(paginationDto);
 
@@ -59,6 +67,12 @@ export class CategoryService {
     if (!category) {
       throw new NotFoundException(ENotFoundMessages.NotFound);
     }
+
+    return category;
+  }
+
+  async findOneByTitle(title: string) {
+    const category = await this.categoryRepository.findOneBy({ title });
 
     return category;
   }

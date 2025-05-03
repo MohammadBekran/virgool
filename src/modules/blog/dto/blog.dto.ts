@@ -26,4 +26,6 @@ export class CreateBlogDto {
   content: string;
   @ApiPropertyOptional()
   image: string;
+  @ApiProperty({ type: String, isArray: true })
+  categories: string | string[];
 }
