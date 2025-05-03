@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -22,7 +23,7 @@ import { ESwaggerConsumes } from 'src/common/enums/swagger-consumes.enum';
 
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { BlogService } from './blog.service';
-import { CreateBlogDto, FilterBlogDto } from './dto/blog.dto';
+import { CreateBlogDto, FilterBlogDto, UpdateBlogDto } from './dto/blog.dto';
 
 @Controller(EControllersName.Blog)
 @ApiTags(EAPITagsName.Blog)
@@ -56,5 +57,11 @@ export class BlogController {
   @Delete(EEndpointKeys.DeleteBlog)
   delete(@Param('id') id: string) {
     return this.blogService.delete(id);
+  }
+
+  @Put(EEndpointKeys.PutUpdateBlog)
+  @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
+  update(@Param('id') id: string, @Body() blogDto: UpdateBlogDto) {
+    return this.blogService.update(id, blogDto);
   }
 }

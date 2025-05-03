@@ -16,7 +16,7 @@ import { generateRandomID } from 'src/common/utils/helper.util';
 import { paginate, paginationData } from 'src/common/utils/pagination.util';
 
 import { CategoryService } from '../category/category.service';
-import { CreateBlogDto, FilterBlogDto } from './dto/blog.dto';
+import { CreateBlogDto, FilterBlogDto, UpdateBlogDto } from './dto/blog.dto';
 import { BlogCategoryEntity } from './entities/blog-category.entity';
 import { BlogEntity } from './entities/blog.entity';
 import { EBlogStatus } from './enums/status.enum';
@@ -137,10 +137,72 @@ export class BlogService {
     };
   }
 
+  async update(id: string, blogDto: UpdateBlogDto) {
+    let { title, slug, description, content, time_to_read, image, categories } =
+      blogDto;
+
+    const blog = await this.checkExistenceBlogByID(id);
+
+    if (categories) {
+      if (!isArray(categories) && typeof categories === 'string') {
+        categories = categories.split(',');
+      } else if (!isArray(categories)) categories = [];
+    }
+
+    let finalSlug = '';
+    if (title) {
+      finalSlug = title;
+      blog.title = title;
+    }
+    if (slug) {
+      finalSlug = slug;
+    }
+    if (finalSlug) {
+      slug = slugify(finalSlug);
+
+      console.log(slug);
+      const existBlog = await this.checkExistenceBlogBySlug(slug);
+      console.log(existBlog, existBlog?.id !== id);
+      if (existBlog && existBlog.id !== id) {
+        blog.slug += `-${generateRandomID()}`;
+      }
+    }
+    console.log(finalSlug);
+    if (description) blog.description = description;
+    if (content) blog.content = content;
+    if (time_to_read) blog.time_to_read = time_to_read;
+    if (image) blog.image = image;
+
+    await this.blogRepository.save(blog);
+
+    if (categories && isArray(categories) && categories.length > 0) {
+      await this.blogCategoryRepository.delete({ blogId: blog.id });
+    }
+    if (categories) {
+      for (const categoryTitle of categories) {
+        const category =
+          await this.categoryService.findOneByTitle(categoryTitle);
+
+        if (!category) {
+          await this.categoryService.createByTitle(categoryTitle);
+        } else {
+          await this.blogCategoryRepository.insert({
+            blogId: blog.id,
+            categoryId: category.id,
+          });
+        }
+      }
+    }
+
+    return {
+      message: EPublicMessages.UpdatedSuccessfully,
+    };
+  }
+
   async checkExistenceBlogBySlug(slug: string) {
     const blog = await this.blogRepository.findOneBy({ slug });
 
-    return !!blog;
+    return blog;
   }
 
   async checkExistenceBlogByID(id: string) {

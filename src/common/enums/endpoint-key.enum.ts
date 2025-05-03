@@ -22,4 +22,5 @@ export enum EEndpointKeys {
   GetMyBlogs = 'my-blogs',
   GetBlogs = '',
   DeleteBlog = ':id',
+  PutUpdateBlog = ':id',
 }
