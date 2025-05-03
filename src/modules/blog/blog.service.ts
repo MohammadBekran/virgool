@@ -1,4 +1,4 @@
-import { Inject, Injectable, Scope } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { isArray } from 'class-validator';
@@ -8,7 +8,10 @@ import { Repository } from 'typeorm';
 
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { EEntityName } from 'src/common/enums/entity.enum';
-import { EPublicMessages } from 'src/common/enums/message.enum';
+import {
+  ENotFoundMessages,
+  EPublicMessages,
+} from 'src/common/enums/message.enum';
 import { generateRandomID } from 'src/common/utils/helper.util';
 import { paginate, paginationData } from 'src/common/utils/pagination.util';
 
@@ -124,9 +127,28 @@ export class BlogService {
     };
   }
 
+  async delete(id: string) {
+    const blog = await this.checkExistenceBlogByID(id);
+
+    await this.blogRepository.delete(blog);
+
+    return {
+      message: EPublicMessages.DeletedSuccessfully,
+    };
+  }
+
   async checkExistenceBlogBySlug(slug: string) {
     const blog = await this.blogRepository.findOneBy({ slug });
 
     return !!blog;
+  }
+
+  async checkExistenceBlogByID(id: string) {
+    const blog = await this.blogRepository.findOneBy({ id });
+    if (!blog) {
+      throw new NotFoundException(ENotFoundMessages.NotFound);
+    }
+
+    return blog;
   }
 }

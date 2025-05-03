@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 
 import { API_BEARER_AUTH } from 'src/common/constants/bearer-auth.constant';
@@ -42,5 +51,10 @@ export class BlogController {
     @Query() filterDto: FilterBlogDto,
   ) {
     return this.blogService.find(paginationDto, filterDto);
+  }
+
+  @Delete(EEndpointKeys.DeleteBlog)
+  delete(@Param('id') id: string) {
+    return this.blogService.delete(id);
   }
 }
