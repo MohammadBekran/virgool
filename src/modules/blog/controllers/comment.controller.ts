@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 
 import { API_BEARER_AUTH } from 'src/common/constants/bearer-auth.constant';
@@ -31,5 +40,15 @@ export class BlogCommentController {
   @Pagination()
   find(@Query() paginationDto: PaginationDto) {
     return this.blogCommentService.find(paginationDto);
+  }
+
+  @Patch(EEndpointKeys.PatchAcceptComment)
+  accept(@Param('id') id: string) {
+    return this.blogCommentService.accept(id);
+  }
+
+  @Patch(EEndpointKeys.PatchRejectComment)
+  reject(@Param('id') id: string) {
+    return this.blogCommentService.reject(id);
   }
 }

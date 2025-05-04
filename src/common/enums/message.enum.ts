@@ -15,6 +15,8 @@ export enum EBadRequestMessages {
   RegisterUsernameExists = 'You cannot set your username directly',
   SomethingWentWrong = 'Something went wrong',
   InvalidID = 'Invalid id',
+  CommentAlreadyAccepted = 'Comment already accepted',
+  CommentAlreadyRejected = 'Comment already rejected',
 }
 
 export enum EAuthMessages {
