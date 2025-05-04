@@ -27,6 +27,7 @@ import { CreateBlogDto, FilterBlogDto, UpdateBlogDto } from './dto/blog.dto';
 import { BlogCategoryEntity } from './entities/blog-category.entity';
 import { BlogEntity } from './entities/blog.entity';
 import { EBlogStatus } from './enums/status.enum';
+import { BlogLikeEntity } from './entities/like.entity';
 
 @Injectable({ scope: Scope.REQUEST })
 export class BlogService {
@@ -35,6 +36,8 @@ export class BlogService {
     private blogRepository: Repository<BlogEntity>,
     @InjectRepository(BlogCategoryEntity)
     private blogCategoryRepository: Repository<BlogCategoryEntity>,
+    @InjectRepository(BlogLikeEntity)
+    private blogLikeRepository: Repository<BlogLikeEntity>,
     @Inject(REQUEST) private request: Request,
     private categoryService: CategoryService,
   ) {}
@@ -115,15 +118,22 @@ export class BlogService {
       where +=
         'CONCAT(blog.title, blog.description, blog.content) ILIKE :search';
     }
-    console.log(where);
 
     const [blogs, count] = await this.blogRepository
       .createQueryBuilder(EEntityName.Blog)
       .leftJoin('blog.categories', 'categories')
       .leftJoin('categories.category', 'category')
-      .addSelect(['categories.id', 'category.title'])
-      .orderBy('blog.created_at', 'DESC')
+      .leftJoin('blog.author', 'author')
+      .leftJoin('author.profile', 'profile')
+      .addSelect([
+        'categories.id',
+        'category.title',
+        'author.username',
+        'profile.nick_name',
+      ])
       .where(where, { category, search })
+      .loadRelationCountAndMap('blog.likes', 'blog.likes')
+      .orderBy('blog.created_at', 'DESC')
       .skip(skip)
       .limit(limit)
       .getManyAndCount();
@@ -203,6 +213,30 @@ export class BlogService {
 
     return {
       message: EPublicMessages.UpdatedSuccessfully,
+    };
+  }
+
+  async toggleLike(blogId: string) {
+    const { id: userId } = this.request.user;
+
+    const blog = await this.checkExistenceBlogByID(blogId);
+    const like = await this.blogLikeRepository.findOneBy({ userId, blogId });
+
+    let message = like
+      ? EPublicMessages.PostDislikedSuccessfully
+      : EPublicMessages.PostLikedSuccessfully;
+
+    if (like) {
+      await this.blogLikeRepository.delete({ userId, blogId });
+    } else {
+      await this.blogLikeRepository.insert({
+        userId,
+        blogId,
+      });
+    }
+
+    return {
+      message,
     };
   }
 

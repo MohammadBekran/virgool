@@ -2,12 +2,15 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
   UpdateDateColumn,
 } from 'typeorm';
 
 import { BaseEntity } from 'src/common/abstracts/base.entity';
 import { EEntityName } from 'src/common/enums/entity.enum';
+import { UserEntity } from 'src/modules/user/entities/user.entity';
 
 import { BlogCategoryEntity } from './blog-category.entity';
 import { BlogBookmarkEntity } from './bookmark.entity';
@@ -39,6 +42,13 @@ export class BlogEntity extends BaseEntity {
 
   @Column()
   authorId: string;
+
+  @ManyToOne(() => UserEntity, (user) => user.blogs, {
+    onDelete: 'CASCADE',
+    nullable: false,
+  })
+  @JoinColumn({ name: 'authorId' })
+  author: UserEntity;
 
   @OneToMany(() => BlogLikeEntity, (like) => like.blog)
   likes: BlogLikeEntity[];

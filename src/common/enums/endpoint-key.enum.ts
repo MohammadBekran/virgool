@@ -25,4 +25,5 @@ export enum EEndpointKeys {
   GetBlogBySlug = 'by-slug/:slug',
   DeleteBlog = ':id',
   PutUpdateBlog = ':id',
+  GetToggleLike = 'like/:id',
 }

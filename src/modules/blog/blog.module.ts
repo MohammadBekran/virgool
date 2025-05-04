@@ -22,6 +22,7 @@ import { BlogLikeEntity } from './entities/like.entity';
       BlogCommentEntity,
       BlogCategoryEntity,
       CategoryEntity,
+      BlogLikeEntity,
     ]),
   ],
   controllers: [BlogController],

@@ -1,11 +1,11 @@
-import { MULTER_WHILE_LIST_FORMAT } from '../constants/multer.constant';
-
 export enum EPublicMessages {
   OTPSentSuccessfully = 'OTP has been sent successfully',
   LoggedInSuccessfully = 'Logged in successfully',
   CreatedSuccessfully = 'Data has been created successfully',
   UpdatedSuccessfully = 'Data has been updated successfully',
   DeletedSuccessfully = 'Data has been deleted successfully',
+  PostLikedSuccessfully = 'Post has been liked successfully',
+  PostDislikedSuccessfully = 'Post has been disliked successfully',
 }
 
 export enum EBadRequestMessages {

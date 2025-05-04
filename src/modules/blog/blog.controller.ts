@@ -76,4 +76,9 @@ export class BlogController {
   update(@Param('id') id: string, @Body() blogDto: UpdateBlogDto) {
     return this.blogService.update(id, blogDto);
   }
+
+  @Get(EEndpointKeys.GetToggleLike)
+  toggleLike(@Param('id') id: string) {
+    return this.blogService.toggleLike(id);
+  }
 }
