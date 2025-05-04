@@ -10,7 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { isArray, isUUID } from 'class-validator';
 import type { Request } from 'express';
 import slugify from 'slugify';
-import { Repository } from 'typeorm';
+import { FindOneOptions, ObjectLiteral, Repository } from 'typeorm';
 
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { EEntityName } from 'src/common/enums/entity.enum';
@@ -137,6 +137,14 @@ export class BlogService {
       .where(where, { category, search })
       .loadRelationCountAndMap('blog.likes', 'blog.likes')
       .loadRelationCountAndMap('blog.bookmarks', 'blog.bookmarks')
+      .loadRelationCountAndMap(
+        'blog.comments',
+        'blog.comments',
+        'comments',
+        (qb) => {
+          return qb.where('comments.accepted = :accepted', { accepted: true });
+        },
+      )
       .orderBy('blog.created_at', 'DESC')
       .skip(skip)
       .limit(limit)
@@ -287,10 +295,7 @@ export class BlogService {
   }
 
   async checkExistenceBlogBySlug(slug: string) {
-    const blog = await this.blogRepository.findOne({
-      where: { slug },
-      ...this.blogRelationSelects(),
-    });
+    const blog = await this.findOneBlog('blog.slug = :slug', { slug });
 
     return blog;
   }
@@ -300,32 +305,43 @@ export class BlogService {
       throw new BadRequestException(EBadRequestMessages.InvalidID);
     }
 
-    const blog = await this.blogRepository.findOne({
-      where: { id },
-      ...this.blogRelationSelects(),
-    });
+    const blog = await this.findOneBlog('blog.id = :id', { id });
+
+    return blog;
+  }
+
+  async findOneBlog(where: string, parameters?: ObjectLiteral) {
+    const blog = await this.blogRepository
+      .createQueryBuilder(EEntityName.Blog)
+      .leftJoin('blog.categories', 'categories')
+      .leftJoin('categories.category', 'category')
+      .leftJoin('blog.author', 'author')
+      .leftJoin('author.profile', 'profile')
+      .addSelect([
+        'categories.id',
+        'category.title',
+        'author.username',
+        'profile.nick_name',
+      ])
+      .where(where, parameters)
+      .loadRelationCountAndMap('blog.likes', 'blog.likes')
+      .loadRelationCountAndMap('blog.bookmarks', 'blog.bookmarks')
+      .loadRelationCountAndMap(
+        'blog.comments',
+        'blog.comments',
+        'comments',
+        (qb) => {
+          return qb.where('comments.accepted = :accepted', {
+            accepted: true,
+          });
+        },
+      )
+      .getOne();
+
     if (!blog) {
       throw new NotFoundException(ENotFoundMessages.NotFound);
     }
 
     return blog;
-  }
-
-  blogRelationSelects() {
-    return {
-      relations: {
-        categories: {
-          category: true,
-        },
-      },
-      select: {
-        categories: {
-          id: true,
-          category: {
-            title: true,
-          },
-        },
-      },
-    };
   }
 }

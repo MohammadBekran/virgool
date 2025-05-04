@@ -1,7 +1,9 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 
 import { API_BEARER_AUTH } from 'src/common/constants/bearer-auth.constant';
+import { Pagination } from 'src/common/decorators/pagination.decorator';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { EAPITagsName } from 'src/common/enums/api-tag.enum';
 import { EControllersName } from 'src/common/enums/controller.enum';
 import { EEndpointKeys } from 'src/common/enums/endpoint-key.enum';
@@ -22,5 +24,12 @@ export class BlogCommentController {
   @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
   create(@Body() commentDto: CreateCommentDto) {
     return this.blogCommentService.create(commentDto);
+  }
+
+  @Get(EEndpointKeys.GetFindComments)
+  @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
+  @Pagination()
+  find(@Query() paginationDto: PaginationDto) {
+    return this.blogCommentService.find(paginationDto);
   }
 }

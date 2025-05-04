@@ -29,4 +29,5 @@ export enum EEndpointKeys {
   GetToggleBookmark = 'bookmark/:id',
   // Comment
   PostCreateComment = '',
+  GetFindComments = 'my-comments',
 }

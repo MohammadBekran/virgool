@@ -28,6 +28,9 @@ export class BlogCommentEntity extends BaseEntity {
   @Column()
   content: string;
 
+  @Column({ type: 'boolean', default: false })
+  accepted: boolean;
+
   @ManyToOne(() => UserEntity, (user) => user.blog_comments, {
     onDelete: 'CASCADE',
   })
