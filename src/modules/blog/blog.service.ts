@@ -26,8 +26,9 @@ import { CategoryService } from '../category/category.service';
 import { CreateBlogDto, FilterBlogDto, UpdateBlogDto } from './dto/blog.dto';
 import { BlogCategoryEntity } from './entities/blog-category.entity';
 import { BlogEntity } from './entities/blog.entity';
-import { EBlogStatus } from './enums/status.enum';
+import { BlogBookmarkEntity } from './entities/bookmark.entity';
 import { BlogLikeEntity } from './entities/like.entity';
+import { EBlogStatus } from './enums/status.enum';
 
 @Injectable({ scope: Scope.REQUEST })
 export class BlogService {
@@ -38,6 +39,8 @@ export class BlogService {
     private blogCategoryRepository: Repository<BlogCategoryEntity>,
     @InjectRepository(BlogLikeEntity)
     private blogLikeRepository: Repository<BlogLikeEntity>,
+    @InjectRepository(BlogBookmarkEntity)
+    private blogBookmarkRepository: Repository<BlogBookmarkEntity>,
     @Inject(REQUEST) private request: Request,
     private categoryService: CategoryService,
   ) {}
@@ -133,6 +136,7 @@ export class BlogService {
       ])
       .where(where, { category, search })
       .loadRelationCountAndMap('blog.likes', 'blog.likes')
+      .loadRelationCountAndMap('blog.bookmarks', 'blog.bookmarks')
       .orderBy('blog.created_at', 'DESC')
       .skip(skip)
       .limit(limit)
@@ -219,7 +223,7 @@ export class BlogService {
   async toggleLike(blogId: string) {
     const { id: userId } = this.request.user;
 
-    const blog = await this.checkExistenceBlogByID(blogId);
+    await this.checkExistenceBlogByID(blogId);
     const like = await this.blogLikeRepository.findOneBy({ userId, blogId });
 
     let message = like
@@ -230,6 +234,33 @@ export class BlogService {
       await this.blogLikeRepository.delete({ userId, blogId });
     } else {
       await this.blogLikeRepository.insert({
+        userId,
+        blogId,
+      });
+    }
+
+    return {
+      message,
+    };
+  }
+
+  async toggleBookmark(blogId: string) {
+    const { id: userId } = this.request.user;
+
+    await this.checkExistenceBlogByID(blogId);
+    const bookmark = await this.blogBookmarkRepository.findOneBy({
+      userId,
+      blogId,
+    });
+
+    let message = bookmark
+      ? EPublicMessages.PostDisBookmarkedSuccessfully
+      : EPublicMessages.PostBookmarkedSuccessfully;
+
+    if (bookmark) {
+      await this.blogBookmarkRepository.delete({ userId, blogId });
+    } else {
+      await this.blogBookmarkRepository.insert({
         userId,
         blogId,
       });

@@ -81,4 +81,9 @@ export class BlogController {
   toggleLike(@Param('id') id: string) {
     return this.blogService.toggleLike(id);
   }
+
+  @Get(EEndpointKeys.GetToggleBookmark)
+  toggleBookmark(@Param('id') id: string) {
+    return this.blogService.toggleBookmark(id);
+  }
 }

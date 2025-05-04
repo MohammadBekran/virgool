@@ -6,6 +6,8 @@ export enum EPublicMessages {
   DeletedSuccessfully = 'Data has been deleted successfully',
   PostLikedSuccessfully = 'Post has been liked successfully',
   PostDislikedSuccessfully = 'Post has been disliked successfully',
+  PostBookmarkedSuccessfully = 'Post has been bookmarked successfully',
+  PostDisBookmarkedSuccessfully = 'Post has been removed from your bookmarked list successfully',
 }
 
 export enum EBadRequestMessages {
