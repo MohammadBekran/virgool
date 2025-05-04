@@ -29,7 +29,8 @@ export enum EEndpointKeys {
   GetToggleBookmark = 'bookmark/:id',
   // Comment
   PostCreateComment = '',
-  GetFindComments = 'my-comments',
+  GetFindComments = '',
+  GetFindMyComments = 'my-comments',
   PatchAcceptComment = 'accept/:id',
   PatchRejectComment = 'reject/:id',
 }

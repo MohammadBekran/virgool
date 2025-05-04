@@ -36,10 +36,15 @@ export class BlogCommentController {
   }
 
   @Get(EEndpointKeys.GetFindComments)
-  @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
   @Pagination()
   find(@Query() paginationDto: PaginationDto) {
     return this.blogCommentService.find(paginationDto);
+  }
+
+  @Get(EEndpointKeys.GetFindMyComments)
+  @Pagination()
+  findMyComments(@Query() paginationDto: PaginationDto) {
+    return this.blogCommentService.findMyComments(paginationDto);
   }
 
   @Patch(EEndpointKeys.PatchAcceptComment)
