@@ -3,4 +3,5 @@ export enum EControllersName {
   User = 'user',
   Category = 'category',
   Blog = 'blog',
+  BlogComment = 'blog-comment',
 }

@@ -21,9 +21,9 @@ import { EControllersName } from 'src/common/enums/controller.enum';
 import { EEndpointKeys } from 'src/common/enums/endpoint-key.enum';
 import { ESwaggerConsumes } from 'src/common/enums/swagger-consumes.enum';
 
-import { AuthGuard } from '../auth/guards/auth.guard';
-import { BlogService } from './blog.service';
-import { CreateBlogDto, FilterBlogDto, UpdateBlogDto } from './dto/blog.dto';
+import { AuthGuard } from '../../auth/guards/auth.guard';
+import { CreateBlogDto, FilterBlogDto, UpdateBlogDto } from '../dto/blog.dto';
+import { BlogService } from '../services/blog.service';
 
 @Controller(EControllersName.Blog)
 @ApiTags(EAPITagsName.Blog)

@@ -8,6 +8,7 @@ export enum EPublicMessages {
   PostDislikedSuccessfully = 'Post has been disliked successfully',
   PostBookmarkedSuccessfully = 'Post has been bookmarked successfully',
   PostDisBookmarkedSuccessfully = 'Post has been removed from your bookmarked list successfully',
+  CommentCreated = 'Comment has been created successfully',
 }
 
 export enum EBadRequestMessages {

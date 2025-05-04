@@ -22,13 +22,13 @@ import {
 import { generateRandomID } from 'src/common/utils/helper.util';
 import { paginate, paginationData } from 'src/common/utils/pagination.util';
 
-import { CategoryService } from '../category/category.service';
-import { CreateBlogDto, FilterBlogDto, UpdateBlogDto } from './dto/blog.dto';
-import { BlogCategoryEntity } from './entities/blog-category.entity';
-import { BlogEntity } from './entities/blog.entity';
-import { BlogBookmarkEntity } from './entities/bookmark.entity';
-import { BlogLikeEntity } from './entities/like.entity';
-import { EBlogStatus } from './enums/status.enum';
+import { CategoryService } from '../../category/category.service';
+import { CreateBlogDto, FilterBlogDto, UpdateBlogDto } from '../dto/blog.dto';
+import { BlogCategoryEntity } from '../entities/blog-category.entity';
+import { BlogEntity } from '../entities/blog.entity';
+import { BlogBookmarkEntity } from '../entities/bookmark.entity';
+import { BlogLikeEntity } from '../entities/like.entity';
+import { EBlogStatus } from '../enums/status.enum';
 
 @Injectable({ scope: Scope.REQUEST })
 export class BlogService {

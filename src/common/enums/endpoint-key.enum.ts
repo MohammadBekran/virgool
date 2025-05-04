@@ -27,4 +27,6 @@ export enum EEndpointKeys {
   PutUpdateBlog = ':id',
   GetToggleLike = 'like/:id',
   GetToggleBookmark = 'bookmark/:id',
+  // Comment
+  PostCreateComment = '',
 }
