@@ -45,6 +45,7 @@ export class BlogCommentEntity extends BaseEntity {
   parent: BlogCommentEntity;
 
   @OneToMany(() => BlogCommentEntity, (comment) => comment.parent)
+  @JoinColumn({ name: 'parent' })
   replies: BlogCommentEntity[];
 
   @CreateDateColumn()

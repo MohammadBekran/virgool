@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  forwardRef,
   Inject,
   Injectable,
   NotFoundException,
@@ -8,7 +9,7 @@ import {
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { FindOptionsWhere, IsNull, Repository } from 'typeorm';
 
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import {
@@ -27,7 +28,7 @@ export class BlogCommentService {
   constructor(
     @InjectRepository(BlogCommentEntity)
     private blogCommentRepository: Repository<BlogCommentEntity>,
-    private blogService: BlogService,
+    @Inject(forwardRef(() => BlogService)) private blogService: BlogService,
     @Inject(REQUEST) private request: Request,
   ) {}
 
@@ -35,7 +36,7 @@ export class BlogCommentService {
     const { id: userId } = this.request.user;
     const { blogId, content, parentId } = commentDto;
 
-    await this.blogService.checkExistenceBlogByID(blogId);
+    await this.blogService.findOne(blogId);
 
     let parent: BlogCommentEntity | null = null;
     if (parentId) {
@@ -148,5 +149,71 @@ export class BlogCommentService {
       take: limit,
       order: { created_at: 'DESC' },
     });
+  }
+
+  async commentListOfBlog(blogId: string, paginationDto: PaginationDto) {
+    const { page, limit, skip } = paginate(paginationDto);
+
+    const [comments, count] = await this.blogCommentRepository.findAndCount({
+      where: { blogId, parentId: IsNull() },
+      relations: {
+        user: { profile: true },
+        replies: {
+          user: { profile: true },
+          replies: {
+            user: { profile: true },
+          },
+        },
+      },
+      select: {
+        user: {
+          username: true,
+          profile: {
+            nick_name: true,
+          },
+        },
+        replies: {
+          content: true,
+          parentId: true,
+          created_at: true,
+          user: {
+            username: true,
+            profile: {
+              nick_name: true,
+            },
+          },
+          replies: {
+            content: true,
+            parentId: true,
+            created_at: true,
+            user: {
+              username: true,
+              profile: {
+                nick_name: true,
+              },
+            },
+            replies: {
+              content: true,
+              parentId: true,
+              created_at: true,
+              user: {
+                username: true,
+                profile: {
+                  nick_name: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      skip,
+      take: limit,
+      order: { created_at: 'DESC' },
+    });
+
+    return {
+      pagination: paginationData(count, page, limit),
+      comments,
+    };
   }
 }

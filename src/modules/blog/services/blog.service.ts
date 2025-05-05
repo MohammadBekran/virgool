@@ -29,6 +29,7 @@ import { BlogEntity } from '../entities/blog.entity';
 import { BlogBookmarkEntity } from '../entities/bookmark.entity';
 import { BlogLikeEntity } from '../entities/like.entity';
 import { EBlogStatus } from '../enums/status.enum';
+import { BlogCommentService } from './comment.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class BlogService {
@@ -43,6 +44,7 @@ export class BlogService {
     private blogBookmarkRepository: Repository<BlogBookmarkEntity>,
     @Inject(REQUEST) private request: Request,
     private categoryService: CategoryService,
+    private commentService: BlogCommentService,
   ) {}
 
   async create(blogDto: CreateBlogDto) {
@@ -55,7 +57,7 @@ export class BlogService {
     } else if (!isArray(categories)) categories = [];
 
     slug = slugify(slug ?? title);
-    const existBlog = await this.checkExistenceBlogBySlug(slug);
+    const existBlog = await this.findOne(null, slug);
     if (existBlog) {
       slug += `-${generateRandomID()}`;
     }
@@ -156,8 +158,21 @@ export class BlogService {
     };
   }
 
+  async findOne(id: string | null, slug?: string) {
+    const blog = await this.blogRepository.findOneBy({
+      id: id ?? undefined,
+      slug: slug ?? undefined,
+    });
+
+    if (!blog) {
+      throw new NotFoundException(ENotFoundMessages.NotFound);
+    }
+
+    return blog;
+  }
+
   async delete(id: string) {
-    const blog = await this.checkExistenceBlogByID(id);
+    const blog = await this.findOne(id);
 
     await this.blogRepository.delete(blog);
 
@@ -170,7 +185,7 @@ export class BlogService {
     let { title, slug, description, content, time_to_read, image, categories } =
       blogDto;
 
-    const blog = await this.checkExistenceBlogByID(id);
+    const blog = await this.findOne(id);
 
     if (categories) {
       if (!isArray(categories) && typeof categories === 'string') {
@@ -189,8 +204,7 @@ export class BlogService {
     if (finalSlug) {
       slug = slugify(finalSlug);
 
-      console.log(slug);
-      const existBlog = await this.checkExistenceBlogBySlug(slug);
+      const existBlog = await this.findOne(null, slug);
       console.log(existBlog, existBlog?.id !== id);
       if (existBlog && existBlog.id !== id) {
         blog.slug += `-${generateRandomID()}`;
@@ -231,7 +245,7 @@ export class BlogService {
   async toggleLike(blogId: string) {
     const { id: userId } = this.request.user;
 
-    await this.checkExistenceBlogByID(blogId);
+    await this.findOne(blogId);
     const like = await this.blogLikeRepository.findOneBy({ userId, blogId });
 
     let message = like
@@ -255,7 +269,7 @@ export class BlogService {
   async toggleBookmark(blogId: string) {
     const { id: userId } = this.request.user;
 
-    await this.checkExistenceBlogByID(blogId);
+    await this.findOne(blogId);
     const bookmark = await this.blogBookmarkRepository.findOneBy({
       userId,
       blogId,
@@ -279,14 +293,14 @@ export class BlogService {
     };
   }
 
-  async findOneByID(id: string) {
-    const blog = await this.checkExistenceBlogByID(id);
+  async findOneByID(id: string, paginationDto: PaginationDto) {
+    const blog = await this.checkExistenceBlogByID(id, paginationDto);
 
     return blog;
   }
 
-  async findOneBySlug(slug: string) {
-    const blog = await this.checkExistenceBlogBySlug(slug);
+  async findOneBySlug(slug: string, paginationDto: PaginationDto) {
+    const blog = await this.checkExistenceBlogBySlug(slug, paginationDto);
     if (!blog) {
       throw new NotFoundException(ENotFoundMessages.NotFound);
     }
@@ -294,23 +308,33 @@ export class BlogService {
     return blog;
   }
 
-  async checkExistenceBlogBySlug(slug: string) {
-    const blog = await this.findOneBlog('blog.slug = :slug', { slug });
+  async checkExistenceBlogBySlug(slug: string, paginationDto: PaginationDto) {
+    const blog = await this.findOneBlog(
+      'blog.slug = :slug',
+      { slug },
+      paginationDto,
+    );
 
     return blog;
   }
 
-  async checkExistenceBlogByID(id: string) {
+  async checkExistenceBlogByID(id: string, paginationDto: PaginationDto) {
     if (!isUUID(id)) {
       throw new BadRequestException(EBadRequestMessages.InvalidID);
     }
 
-    const blog = await this.findOneBlog('blog.id = :id', { id });
+    const blog = await this.findOneBlog('blog.id = :id', { id }, paginationDto);
 
     return blog;
   }
 
-  async findOneBlog(where: string, parameters?: ObjectLiteral) {
+  async findOneBlog(
+    where: string,
+    parameters?: ObjectLiteral,
+    paginationDto?: PaginationDto,
+  ) {
+    const userId = this.request?.user?.id;
+
     const blog = await this.blogRepository
       .createQueryBuilder(EEntityName.Blog)
       .leftJoin('blog.categories', 'categories')
@@ -342,6 +366,26 @@ export class BlogService {
       throw new NotFoundException(ENotFoundMessages.NotFound);
     }
 
-    return blog;
+    const blogId = blog.id;
+
+    const isLiked = await this.blogLikeRepository.findOneBy({
+      blogId,
+      userId,
+    });
+    const isBookmarked = await this.blogBookmarkRepository.findOneBy({
+      blogId,
+      userId,
+    });
+    const comments = await this.commentService.commentListOfBlog(
+      blogId,
+      paginationDto!,
+    );
+
+    return {
+      blog,
+      isLiked: isLiked ?? false,
+      isBookmarked: isBookmarked ?? false,
+      comments,
+    };
   }
 }

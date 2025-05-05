@@ -56,14 +56,19 @@ export class BlogController {
 
   @Get(EEndpointKeys.GetBlogByID)
   @SkipAuth()
-  findOneByID(@Param('id') id: string) {
-    return this.blogService.findOneByID(id);
+  @Pagination()
+  findOneByID(@Param('id') id: string, @Query() paginationDto: PaginationDto) {
+    return this.blogService.findOneByID(id, paginationDto);
   }
 
   @Get(EEndpointKeys.GetBlogBySlug)
   @SkipAuth()
-  findOneBySlug(@Param('slug') slug: string) {
-    return this.blogService.findOneBySlug(slug);
+  @Pagination()
+  findOneBySlug(
+    @Param('slug') slug: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.blogService.findOneBySlug(slug, paginationDto);
   }
 
   @Delete(EEndpointKeys.DeleteBlog)
