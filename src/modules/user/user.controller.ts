@@ -6,14 +6,13 @@ import {
   Post,
   Put,
   Res,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 
-import { API_BEARER_AUTH } from 'src/common/constants/bearer-auth.constant';
+import { AuthDecorator } from 'src/common/decorators/auth-decorator.decorator';
 import { EAPITagsName } from 'src/common/enums/api-tag.enum';
 import { EControllersName } from 'src/common/enums/controller.enum';
 import { ECookieKeys } from 'src/common/enums/cookie.enum';
@@ -25,7 +24,6 @@ import { multerStorage } from 'src/common/utils/multer.util';
 
 import { UploadFile } from 'src/common/decorators/upload-file.decorator';
 import { OTPDto } from '../auth/dto/auth.dto';
-import { AuthGuard } from '../auth/guards/auth.guard';
 import {
   ChangeEmailDto,
   ChangePhoneDto,
@@ -36,8 +34,7 @@ import type { TProfileImages } from './types/file.type';
 import { UserService } from './user.service';
 
 @Controller(EControllersName.User)
-@ApiBearerAuth(API_BEARER_AUTH)
-@UseGuards(AuthGuard)
+@AuthDecorator()
 @UseInterceptors(
   FileFieldsInterceptor(
     [

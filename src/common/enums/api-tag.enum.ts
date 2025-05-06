@@ -3,4 +3,5 @@ export enum EAPITagsName {
   User = 'User',
   Category = 'Category',
   Blog = 'Blog',
+  Image = 'Image',
 }

@@ -11,15 +11,16 @@ import { isDate } from 'class-validator';
 import type { Request } from 'express';
 import { Repository } from 'typeorm';
 
+import { ECookieKeys } from 'src/common/enums/cookie.enum';
 import {
   EAuthMessages,
   EBadRequestMessages,
   EConflictMessages,
   EPublicMessages,
 } from 'src/common/enums/message.enum';
-
-import { ECookieKeys } from 'src/common/enums/cookie.enum';
 import { checkOTPValidation } from 'src/common/utils/check-otp.util';
+import { makeAbsoluteAddressOfGivenImagePath } from 'src/common/utils/image.util';
+
 import { AuthService } from '../auth/auth.service';
 import { EAuthMethod } from '../auth/enums/method.enum';
 import { TokensService } from '../auth/tokens.service';
@@ -54,12 +55,16 @@ export class UserService {
     if (files?.profile_image?.length > 0) {
       const [image] = files.profile_image;
 
-      profileDto.profile_image = `${process.env.URL}/${image.path.slice(7).replaceAll('\\', '/')}`;
+      profileDto.profile_image = makeAbsoluteAddressOfGivenImagePath(
+        image?.path,
+      );
     }
     if (files?.background_image?.length > 0) {
       const [image] = files.background_image;
 
-      profileDto.background_image = `${process.env.URL}/${image.path.slice(7).replaceAll('\\', '/')}`;
+      profileDto.background_image = makeAbsoluteAddressOfGivenImagePath(
+        image?.path,
+      );
     }
 
     const {
