@@ -17,6 +17,7 @@ import { BlogCommentEntity } from 'src/modules/blog/entities/comment.entity';
 import { BlogLikeEntity } from 'src/modules/blog/entities/like.entity';
 import { ImageEntity } from 'src/modules/image/entities/image.entity';
 
+import { FollowEntity } from './follow.entity';
 import { OTPEntity } from './otp.entity';
 import { ProfileEntity } from './profile.entity';
 
@@ -85,6 +86,12 @@ export class UserEntity extends BaseEntity {
 
   @OneToMany(() => ImageEntity, (image) => image.user)
   images: ImageEntity[];
+
+  @OneToMany(() => FollowEntity, (follow) => follow.follower)
+  followings: FollowEntity[];
+
+  @OneToMany(() => FollowEntity, (follow) => follow.following)
+  followers: FollowEntity[];
 
   @CreateDateColumn()
   created_at: Date;

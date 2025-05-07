@@ -33,4 +33,5 @@ export enum EEndpointKeys {
   GetFindMyComments = 'my-comments',
   PatchAcceptComment = 'accept/:id',
   PatchRejectComment = 'reject/:id',
+  Follow = 'follow/:followingId',
 }

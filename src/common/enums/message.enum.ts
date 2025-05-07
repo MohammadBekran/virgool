@@ -9,6 +9,8 @@ export enum EPublicMessages {
   PostBookmarkedSuccessfully = 'Post has been bookmarked successfully',
   PostDisBookmarkedSuccessfully = 'Post has been removed from your bookmarked list successfully',
   CommentCreated = 'Comment has been created successfully',
+  UserFollowed = 'User has been followed successfully',
+  UserUnFollowed = 'User has been unfollowed successfully',
 }
 
 export enum EBadRequestMessages {
@@ -17,6 +19,7 @@ export enum EBadRequestMessages {
   InvalidID = 'Invalid id',
   CommentAlreadyAccepted = 'Comment already accepted',
   CommentAlreadyRejected = 'Comment already rejected',
+  CannotFollowYourself = 'You cannot follow yourself',
 }
 
 export enum EAuthMessages {

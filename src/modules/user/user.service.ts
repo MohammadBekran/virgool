@@ -3,6 +3,7 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  NotFoundException,
   Scope,
 } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
@@ -16,8 +17,10 @@ import {
   EAuthMessages,
   EBadRequestMessages,
   EConflictMessages,
+  ENotFoundMessages,
   EPublicMessages,
 } from 'src/common/enums/message.enum';
+import { EEntityName } from 'src/common/enums/entity.enum';
 import { checkOTPValidation } from 'src/common/utils/check-otp.util';
 
 import { AuthService } from '../auth/auth.service';
@@ -33,6 +36,7 @@ import type {
   TEmailTokenPayload,
   TPhoneTokenPayload,
 } from './types/payload.type';
+import { FollowEntity } from './entities/follow.entity';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserService {
@@ -43,6 +47,8 @@ export class UserService {
     private profileRepository: Repository<ProfileEntity>,
     @InjectRepository(OTPEntity)
     private otpRepository: Repository<OTPEntity>,
+    @InjectRepository(FollowEntity)
+    private followRepository: Repository<FollowEntity>,
     @Inject(REQUEST) private request: Request,
     private authService: AuthService,
     private tokensService: TokensService,
@@ -117,10 +123,13 @@ export class UserService {
   async profile() {
     const { id } = this.request.user;
 
-    const user = await this.userRepository.findOne({
-      where: { id },
-      relations: ['profile'],
-    });
+    const user = await this.userRepository
+      .createQueryBuilder(EEntityName.User)
+      .where({ id })
+      .leftJoin('user.profile', 'profile')
+      .loadRelationCountAndMap('user.followers', 'user.followers')
+      .loadRelationCountAndMap('user.followings', 'user.followings')
+      .getOne();
 
     return user;
   }
@@ -267,6 +276,41 @@ export class UserService {
 
     return {
       message: EPublicMessages.UpdatedSuccessfully,
+    };
+  }
+
+  async toggleFollow(followingId: string) {
+    const { id: userId } = this.request.user;
+
+    if (userId === followingId) {
+      throw new BadRequestException(EBadRequestMessages.CannotFollowYourself);
+    }
+
+    const followingUser = await this.userRepository.findOneBy({
+      id: followingId,
+    });
+    if (!followingUser) {
+      throw new NotFoundException(ENotFoundMessages.NotFound);
+    }
+
+    const isFollowing = await this.followRepository.findOneBy({
+      followerId: userId,
+      followingId,
+    });
+
+    if (isFollowing) {
+      await this.followRepository.remove(isFollowing);
+    } else {
+      await this.followRepository.insert({
+        followingId,
+        followerId: userId,
+      });
+    }
+
+    return {
+      message: isFollowing
+        ? EPublicMessages.UserUnFollowed
+        : EPublicMessages.UserFollowed,
     };
   }
 }

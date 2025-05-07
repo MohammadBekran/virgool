@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Patch,
   Post,
   Put,
@@ -9,7 +10,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiConsumes, ApiParam, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 
 import { AuthDecorator } from 'src/common/decorators/auth.decorator';
@@ -32,8 +33,6 @@ import {
 } from './dto/profile.dto';
 import type { TProfileImages } from './types/file.type';
 import { UserService } from './user.service';
-import { ERole } from 'src/common/enums/role.enum';
-import { RequiredRoles } from 'src/common/decorators/roles.decorator';
 
 @Controller(EControllersName.User)
 @AuthDecorator()
@@ -63,7 +62,6 @@ export class UserController {
   }
 
   @Get(EEndpointKeys.GetProfile)
-  @RequiredRoles(ERole.Admin)
   profile() {
     return this.userService.profile();
   }
@@ -126,5 +124,11 @@ export class UserController {
   @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
   async changeUsername(@Body() usernameDto: ChangeUsernameDto) {
     return this.userService.changeUsername(usernameDto.username);
+  }
+
+  @Get(EEndpointKeys.Follow)
+  @ApiParam({ name: 'followingId' })
+  follow(@Param('followingId') followingId: string) {
+    return this.userService.toggleFollow(followingId);
   }
 }
