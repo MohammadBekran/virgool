@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 
-import { AuthDecorator } from 'src/common/decorators/auth-decorator.decorator';
+import { AuthDecorator } from 'src/common/decorators/auth.decorator';
 import { EAPITagsName } from 'src/common/enums/api-tag.enum';
 import { EControllersName } from 'src/common/enums/controller.enum';
 import { ESwaggerConsumes } from 'src/common/enums/swagger-consumes.enum';

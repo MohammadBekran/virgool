@@ -8,7 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { isJWT } from 'class-validator';
 import type { Request } from 'express';
 
-import { SKIP_AUTH } from 'src/common/constants/skip-auth.constant';
+import { SKIP_AUTH } from 'src/common/decorators/skip-auth.decorator';
 import { EAuthMessages } from 'src/common/enums/message.enum';
 
 import { AuthService } from '../auth.service';

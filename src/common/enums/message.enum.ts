@@ -48,3 +48,7 @@ export enum EValidationMessages {
   InvalidEmail = 'Invalid email',
   InvalidPhone = 'Invalid phone',
 }
+
+export enum EForbiddenMessages {
+  AccessDenied = 'Access denied: insufficient role',
+}

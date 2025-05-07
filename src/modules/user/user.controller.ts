@@ -12,7 +12,7 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 
-import { AuthDecorator } from 'src/common/decorators/auth-decorator.decorator';
+import { AuthDecorator } from 'src/common/decorators/auth.decorator';
 import { EAPITagsName } from 'src/common/enums/api-tag.enum';
 import { EControllersName } from 'src/common/enums/controller.enum';
 import { ECookieKeys } from 'src/common/enums/cookie.enum';
@@ -32,6 +32,8 @@ import {
 } from './dto/profile.dto';
 import type { TProfileImages } from './types/file.type';
 import { UserService } from './user.service';
+import { ERole } from 'src/common/enums/role.enum';
+import { RequiredRoles } from 'src/common/decorators/roles.decorator';
 
 @Controller(EControllersName.User)
 @AuthDecorator()
@@ -61,6 +63,7 @@ export class UserController {
   }
 
   @Get(EEndpointKeys.GetProfile)
+  @RequiredRoles(ERole.Admin)
   profile() {
     return this.userService.profile();
   }

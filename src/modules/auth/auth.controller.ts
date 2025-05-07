@@ -2,7 +2,7 @@ import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 
-import { AuthDecorator } from 'src/common/decorators/auth-decorator.decorator';
+import { AuthDecorator } from 'src/common/decorators/auth.decorator';
 import { EAPITagsName } from 'src/common/enums/api-tag.enum';
 import { EControllersName } from 'src/common/enums/controller.enum';
 import { EEndpointKeys } from 'src/common/enums/endpoint-key.enum';

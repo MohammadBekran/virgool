@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 
-import { AuthDecorator } from 'src/common/decorators/auth-decorator.decorator';
+import { AuthDecorator } from 'src/common/decorators/auth.decorator';
 import { FilterBlog } from 'src/common/decorators/filter.decorator';
 import { Pagination } from 'src/common/decorators/pagination.decorator';
 import { SkipAuth } from 'src/common/decorators/skip-auth.decorator';

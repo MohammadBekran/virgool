@@ -10,6 +10,7 @@ import {
 
 import { BaseEntity } from 'src/common/abstracts/base.entity';
 import { EEntityName } from 'src/common/enums/entity.enum';
+import { ERole } from 'src/common/enums/role.enum';
 import { BlogEntity } from 'src/modules/blog/entities/blog.entity';
 import { BlogBookmarkEntity } from 'src/modules/blog/entities/bookmark.entity';
 import { BlogCommentEntity } from 'src/modules/blog/entities/comment.entity';
@@ -44,6 +45,13 @@ export class UserEntity extends BaseEntity {
 
   @Column({ nullable: true })
   password: string;
+
+  @Column('enum', {
+    enum: ERole,
+    array: true,
+    default: [ERole.User],
+  })
+  roles: ERole[];
 
   @Column({ nullable: true })
   otpId: string;

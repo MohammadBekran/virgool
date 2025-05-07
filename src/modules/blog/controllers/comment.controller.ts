@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 
-import { AuthDecorator } from 'src/common/decorators/auth-decorator.decorator';
+import { AuthDecorator } from 'src/common/decorators/auth.decorator';
 import { Pagination } from 'src/common/decorators/pagination.decorator';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { EAPITagsName } from 'src/common/enums/api-tag.enum';
