@@ -1,12 +1,14 @@
-import { Inject, Injectable, Scope } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Request } from 'express';
 import { Repository } from 'typeorm';
 
-import { EPublicMessages } from 'src/common/enums/message.enum';
+import {
+  ENotFoundMessages,
+  EPublicMessages,
+} from 'src/common/enums/message.enum';
 import type { TMulterFile } from 'src/common/types/multer.type';
-import { makeAbsoluteAddressOfGivenImagePath } from 'src/common/utils/image.util';
 
 import { ImageDto } from './dto/image.dto';
 import { ImageEntity } from './entities/image.entity';
@@ -23,7 +25,7 @@ export class ImageService {
     const { id: userId } = this.request.user;
     const { name, alt } = imageDto;
 
-    const location = makeAbsoluteAddressOfGivenImagePath(image?.path);
+    const location = image?.path?.slice(7);
 
     await this.imageRepository.insert({
       name,
@@ -37,15 +39,36 @@ export class ImageService {
     };
   }
 
-  findAll() {
-    return `This action returns all image`;
+  async findAll() {
+    const { id: userId } = this.request.user;
+
+    const images = await this.imageRepository.find({
+      where: { userId },
+      order: { created_at: 'DESC' },
+    });
+
+    return images;
   }
 
-  findOne(id: string) {
-    return `This action returns a #${id} image`;
+  async findOne(id: string) {
+    const { id: userId } = this.request.user;
+
+    const image = await this.imageRepository.findOne({
+      where: { userId, id },
+    });
+    if (!image) {
+      throw new NotFoundException(ENotFoundMessages.NotFound);
+    }
+
+    return image;
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} image`;
+  async remove(id: string) {
+    const image = await this.findOne(id);
+    this.imageRepository.remove(image);
+
+    return {
+      message: EPublicMessages.DeletedSuccessfully,
+    };
   }
 }

@@ -10,7 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { isArray, isUUID } from 'class-validator';
 import type { Request } from 'express';
 import slugify from 'slugify';
-import { FindOneOptions, ObjectLiteral, Repository } from 'typeorm';
+import { ObjectLiteral, Repository } from 'typeorm';
 
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { EEntityName } from 'src/common/enums/entity.enum';

@@ -19,7 +19,6 @@ import {
   EPublicMessages,
 } from 'src/common/enums/message.enum';
 import { checkOTPValidation } from 'src/common/utils/check-otp.util';
-import { makeAbsoluteAddressOfGivenImagePath } from 'src/common/utils/image.util';
 
 import { AuthService } from '../auth/auth.service';
 import { EAuthMethod } from '../auth/enums/method.enum';
@@ -55,16 +54,12 @@ export class UserService {
     if (files?.profile_image?.length > 0) {
       const [image] = files.profile_image;
 
-      profileDto.profile_image = makeAbsoluteAddressOfGivenImagePath(
-        image?.path,
-      );
+      profileDto.profile_image = image?.path?.slice(7);
     }
     if (files?.background_image?.length > 0) {
       const [image] = files.background_image;
 
-      profileDto.background_image = makeAbsoluteAddressOfGivenImagePath(
-        image?.path,
-      );
+      profileDto.background_image = image?.path?.slice(7);
     }
 
     const {

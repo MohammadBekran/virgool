@@ -1,4 +1,5 @@
 import {
+  AfterLoad,
   Column,
   CreateDateColumn,
   Entity,
@@ -30,4 +31,11 @@ export class ImageEntity extends BaseEntity {
 
   @CreateDateColumn()
   created_at: Date;
+
+  @AfterLoad()
+  makeImageLocationAbsolute() {
+    const location = String(this.location).replaceAll(/\\/g, '/');
+
+    this.location = `${process.env.URL}/${location}`;
+  }
 }
