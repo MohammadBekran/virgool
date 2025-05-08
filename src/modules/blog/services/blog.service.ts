@@ -10,7 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { isArray, isUUID } from 'class-validator';
 import type { Request } from 'express';
 import slugify from 'slugify';
-import { ObjectLiteral, Repository } from 'typeorm';
+import { DataSource, type ObjectLiteral, Repository } from 'typeorm';
 
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { EEntityName } from 'src/common/enums/entity.enum';
@@ -45,6 +45,7 @@ export class BlogService {
     @Inject(REQUEST) private request: Request,
     private categoryService: CategoryService,
     private commentService: BlogCommentService,
+    private dataSource: DataSource,
   ) {}
 
   async create(blogDto: CreateBlogDto) {
@@ -362,11 +363,80 @@ export class BlogService {
       )
       .getOne();
 
+    const hello = await this.blogRepository
+      .createQueryBuilder(EEntityName.Blog)
+      .leftJoin('blog.categories', 'categories')
+      .leftJoin('categories.category', 'category')
+      .leftJoin('blog.author', 'author')
+      .leftJoin('author.profile', 'profile')
+      .addSelect([
+        'categories.id',
+        'category.title',
+        'author.username',
+        'profile.nick_name',
+      ])
+      .where(where, parameters)
+      .loadRelationCountAndMap('blog.likes', 'blog.likes')
+      .loadRelationCountAndMap('blog.bookmarks', 'blog.bookmarks')
+      .loadRelationCountAndMap(
+        'blog.comments',
+        'blog.comments',
+        'comments',
+        (qb) => {
+          return qb.where('comments.accepted = :accepted', {
+            accepted: true,
+          });
+        },
+      );
+
+    console.log(hello.getSql());
+
     if (!blog) {
       throw new NotFoundException(ENotFoundMessages.NotFound);
     }
 
     const blogId = blog.id;
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    const suggestedBlogs = await queryRunner.query(`
+      WITH suggested_blogs AS (
+        SELECT
+            b.id,
+            b.slug,
+            b.title,
+            b.description,
+            b.time_to_read,
+            b.image,
+            json_build_object(
+              'username', u.username,
+              'nick_name', p.nick_name,
+              'profile_image', p.profile_image
+            ) AS author,
+            array_agg(DISTINCT c.title) AS categories,
+            (
+              SELECT COUNT(*) FROM blog_like
+              WHERE blog_like."blogId"::uuid = b.id::uuid
+            ) AS likes,
+            (
+              SELECT COUNT(*) FROM blog_bookmark
+              WHERE blog_bookmark."blogId"::uuid = b.id::uuid
+            ) AS bookmarks,
+            (
+              SELECT COUNT(*) FROM blog_comment
+              WHERE blog_comment."blogId"::uuid = b.id::uuid
+            ) AS comments
+        FROM blog b
+        LEFT JOIN blog_category bc ON bc."blogId" = b.id  
+        LEFT JOIN public.user u ON u.id = b."authorId" 
+        LEFT JOIN profile p ON p.id = u."profileId" 
+        LEFT JOIN category c ON c.id= bc."categoryId"  
+        GROUP BY b.id, u.username, p.nick_name, p.profile_image
+        ORDER BY RANDOM()
+        LIMIT 4
+      )
+      SELECT * FROM suggested_blogs
+    `);
 
     const isLiked = await this.blogLikeRepository.findOneBy({
       blogId,
@@ -386,6 +456,7 @@ export class BlogService {
       isLiked: isLiked ?? false,
       isBookmarked: isBookmarked ?? false,
       comments,
+      suggestedBlogs,
     };
   }
 }
