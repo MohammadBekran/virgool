@@ -3,6 +3,9 @@ export enum EEndpointKeys {
   PostUserExistence = 'user-existence',
   PostCheckOTP = 'check-otp',
   GetCheckLogin = 'check-login',
+  // Google
+  GetGoogle = '',
+  GetGoogleRedirect = 'redirect',
   // User
   GetFind = '',
   GetProfile = 'profile',

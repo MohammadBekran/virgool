@@ -16,7 +16,7 @@ import {
 } from 'src/common/enums/message.enum';
 import { EUserStatus } from 'src/modules/user/enums/status.enum';
 
-import { AuthService } from '../auth.service';
+import { AuthService } from '../services/auth.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {

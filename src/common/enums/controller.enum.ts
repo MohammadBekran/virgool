@@ -5,4 +5,5 @@ export enum EControllersName {
   Blog = 'blog',
   BlogComment = 'blog-comment',
   Image = 'image',
+  Google = 'auth/google',
 }

@@ -25,9 +25,9 @@ import {
 import { checkOTPValidation } from 'src/common/utils/check-otp.util';
 import { paginate, paginationData } from 'src/common/utils/pagination.util';
 
-import { AuthService } from '../auth/auth.service';
+import { AuthService } from '../auth/services/auth.service';
 import { EAuthMethod } from '../auth/enums/method.enum';
-import { TokensService } from '../auth/tokens.service';
+import { TokenService } from '../auth/services/token.service';
 import { BlockDto, ProfileDto } from './dto/profile.dto';
 import { FollowEntity } from './entities/follow.entity';
 import { OTPEntity } from './entities/otp.entity';
@@ -40,6 +40,7 @@ import type {
   TPhoneTokenPayload,
 } from './types/payload.type';
 import { EUserStatus } from './enums/status.enum';
+import { TGoogleUser } from '../auth/types/response.type';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserService {
@@ -54,7 +55,7 @@ export class UserService {
     private followRepository: Repository<FollowEntity>,
     @Inject(REQUEST) private request: Request,
     private authService: AuthService,
-    private tokensService: TokensService,
+    private tokensService: TokenService,
   ) {}
 
   async find(paginationDto: PaginationDto) {
@@ -483,6 +484,50 @@ export class UserService {
 
     return {
       message: EPublicMessages.UpdatedSuccessfully,
+    };
+  }
+
+  async googleLogin(googleUser: TGoogleUser) {
+    const { email, firstName, lastName, id } = googleUser;
+
+    let user = await this.userRepository.findOneBy({ email });
+    let accessToken: string;
+
+    if (user) {
+      accessToken = this.tokensService.generateToken(
+        {
+          userId: user.id,
+        },
+        process.env.ACCESS_TOKEN_SECRET,
+        '1y',
+      );
+    } else {
+      user = this.userRepository.create({
+        email,
+        username: `g_${id}`,
+        is_email_verified: true,
+      });
+      await this.userRepository.save(user);
+      let profile = this.profileRepository.create({
+        userId: user.id,
+        nick_name: `${firstName} ${lastName}`,
+      });
+      profile = await this.profileRepository.save(profile);
+      user.profileId = profile.id;
+      await this.userRepository.save(user);
+
+      accessToken = this.tokensService.generateToken(
+        {
+          userId: user.id,
+        },
+        process.env.ACCESS_TOKEN_SECRET,
+        '1y',
+      );
+    }
+
+    return {
+      message: EPublicMessages.LoggedInSuccessfully,
+      accessToken,
     };
   }
 }

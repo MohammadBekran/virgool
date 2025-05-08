@@ -4,4 +4,5 @@ export enum EAPITagsName {
   Category = 'Category',
   Blog = 'Blog',
   Image = 'Image',
+  Google = 'Google',
 }

@@ -23,15 +23,15 @@ import {
 } from 'src/common/enums/message.enum';
 import { checkOTPValidation } from 'src/common/utils/check-otp.util';
 import { CookieOptions } from 'src/common/utils/cookie.util';
+import { OTPEntity } from 'src/modules/user/entities/otp.entity';
+import { UserEntity } from 'src/modules/user/entities/user.entity';
 
-import { OTPEntity } from '../user/entities/otp.entity';
-import { UserEntity } from '../user/entities/user.entity';
-import { AuthDto } from './dto/auth.dto';
-import { EAuthMethod } from './enums/method.enum';
-import { EAuthType } from './enums/type.enum';
-import { TokensService } from './tokens.service';
-import type { TCookiePayload } from './types/payload.type';
-import type { TAuthResponse } from './types/response.type';
+import { AuthDto } from '../dto/auth.dto';
+import { EAuthMethod } from '../enums/method.enum';
+import { EAuthType } from '../enums/type.enum';
+import type { TCookiePayload } from '../types/payload.type';
+import type { TAuthResponse } from '../types/response.type';
+import { TokenService } from './token.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class AuthService {
@@ -40,7 +40,7 @@ export class AuthService {
     private userRepository: Repository<UserEntity>,
     @InjectRepository(OTPEntity) private otpRepository: Repository<OTPEntity>,
     @Inject(REQUEST) private request: Request,
-    private tokensService: TokensService,
+    private tokensService: TokenService,
   ) {}
 
   async userExistence(authDto: AuthDto, res: Response) {

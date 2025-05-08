@@ -16,5 +16,9 @@ namespace NodeJS {
     REFRESH_TOKEN_SECRET: string;
     EMAIL_TOKEN_SECRET: string;
     PHONE_TOKEN_SECRET: string;
+    // Google
+    GOOGLE_CLIENT_ID: string;
+    GOOGLE_CLIENT_SECRET: string;
+    GOOGLE_CALLBACK_URL: string;
   }
 }

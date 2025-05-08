@@ -8,8 +8,8 @@ import { EControllersName } from 'src/common/enums/controller.enum';
 import { EEndpointKeys } from 'src/common/enums/endpoint-key.enum';
 import { ESwaggerConsumes } from 'src/common/enums/swagger-consumes.enum';
 
-import { AuthService } from './auth.service';
-import { AuthDto, OTPDto } from './dto/auth.dto';
+import { AuthDto, OTPDto } from '../dto/auth.dto';
+import { AuthService } from '../services/auth.service';
 
 @Controller(EControllersName.Auth)
 @ApiTags(EAPITagsName.Auth)

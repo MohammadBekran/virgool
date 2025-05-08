@@ -5,7 +5,7 @@ import { EAuthMessages } from 'src/common/enums/message.enum';
 import type { TExceptionConstructor } from 'src/common/types/exception-constructor.type';
 
 @Injectable()
-export class TokensService {
+export class TokenService {
   constructor(private jwtService: JwtService) {}
 
   generateToken<T extends object>(
