@@ -31,6 +31,7 @@ import { multerStorage } from 'src/common/utils/multer.util';
 
 import { OTPDto } from '../auth/dto/auth.dto';
 import {
+  BlockDto,
   ChangeEmailDto,
   ChangePhoneDto,
   ChangeUsernameDto,
@@ -86,6 +87,25 @@ export class UserController {
     return this.userService.toggleFollow(followingId);
   }
 
+  @Post(EEndpointKeys.PostVerifyEmail)
+  @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
+  verifyEmail(@Body() otpDto: OTPDto) {
+    return this.userService.verifyEmail(otpDto.code);
+  }
+
+  @Post(EEndpointKeys.PostVerifyPhone)
+  @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
+  verifyPhone(@Body() otpDto: OTPDto) {
+    return this.userService.verifyPhone(otpDto.code);
+  }
+
+  @Post(EEndpointKeys.ToggleBlock)
+  @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
+  @RequiredRoles(ERole.Admin)
+  async toggleBlock(@Body() blockDto: BlockDto) {
+    return this.userService.toggleBlock(blockDto);
+  }
+
   @Put(EEndpointKeys.UpdateProfile)
   @ApiConsumes(ESwaggerConsumes.FormData)
   updateProfile(
@@ -117,12 +137,6 @@ export class UserController {
     });
   }
 
-  @Post(EEndpointKeys.PostVerifyEmail)
-  @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
-  verifyEmail(@Body() otpDto: OTPDto) {
-    return this.userService.verifyEmail(otpDto.code);
-  }
-
   @Patch(EEndpointKeys.PatchChangePhone)
   @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
   async changePhone(@Body() phoneDto: ChangePhoneDto, @Res() res: Response) {
@@ -142,12 +156,6 @@ export class UserController {
       message: EPublicMessages.OTPSentSuccessfully,
       code,
     });
-  }
-
-  @Post(EEndpointKeys.PostVerifyPhone)
-  @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
-  verifyPhone(@Body() otpDto: OTPDto) {
-    return this.userService.verifyPhone(otpDto.code);
   }
 
   @Patch(EEndpointKeys.PatchChangeUsername)

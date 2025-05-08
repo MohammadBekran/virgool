@@ -4,6 +4,7 @@ import {
   IsEnum,
   IsMobilePhone,
   IsString,
+  IsUUID,
   Length,
 } from 'class-validator';
 
@@ -48,4 +49,10 @@ export class ChangeUsernameDto {
   @IsString()
   @Length(3, 100)
   username: string;
+}
+
+export class BlockDto {
+  @ApiProperty()
+  @IsUUID()
+  userId: string;
 }

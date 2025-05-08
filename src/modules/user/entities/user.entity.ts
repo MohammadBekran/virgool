@@ -17,6 +17,7 @@ import { BlogCommentEntity } from 'src/modules/blog/entities/comment.entity';
 import { BlogLikeEntity } from 'src/modules/blog/entities/like.entity';
 import { ImageEntity } from 'src/modules/image/entities/image.entity';
 
+import { EUserStatus } from '../enums/status.enum';
 import { FollowEntity } from './follow.entity';
 import { OTPEntity } from './otp.entity';
 import { ProfileEntity } from './profile.entity';
@@ -53,6 +54,12 @@ export class UserEntity extends BaseEntity {
     default: [ERole.User],
   })
   roles: ERole[];
+
+  @Column('enum', {
+    enum: EUserStatus,
+    default: EUserStatus.Active,
+  })
+  status: EUserStatus;
 
   @Column({ nullable: true })
   otpId: string;

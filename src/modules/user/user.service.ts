@@ -28,7 +28,7 @@ import { paginate, paginationData } from 'src/common/utils/pagination.util';
 import { AuthService } from '../auth/auth.service';
 import { EAuthMethod } from '../auth/enums/method.enum';
 import { TokensService } from '../auth/tokens.service';
-import { ProfileDto } from './dto/profile.dto';
+import { BlockDto, ProfileDto } from './dto/profile.dto';
 import { FollowEntity } from './entities/follow.entity';
 import { OTPEntity } from './entities/otp.entity';
 import { ProfileEntity } from './entities/profile.entity';
@@ -39,6 +39,7 @@ import type {
   TEmailTokenPayload,
   TPhoneTokenPayload,
 } from './types/payload.type';
+import { EUserStatus } from './enums/status.enum';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserService {
@@ -79,6 +80,7 @@ export class UserService {
         username: true,
         phone: true,
         email: true,
+        status: true,
         roles: true,
         created_at: true,
         profile: {
@@ -209,6 +211,142 @@ export class UserService {
     };
   }
 
+  async toggleFollow(followingId: string) {
+    const { id: userId } = this.request.user;
+
+    if (userId === followingId) {
+      throw new BadRequestException(EBadRequestMessages.CannotFollowYourself);
+    }
+
+    const followingUser = await this.userRepository.findOneBy({
+      id: followingId,
+    });
+    if (!followingUser) {
+      throw new NotFoundException(ENotFoundMessages.NotFound);
+    }
+
+    const isFollowing = await this.followRepository.findOneBy({
+      followerId: userId,
+      followingId,
+    });
+
+    if (isFollowing) {
+      await this.followRepository.remove(isFollowing);
+    } else {
+      await this.followRepository.insert({
+        followingId,
+        followerId: userId,
+      });
+    }
+
+    return {
+      message: isFollowing
+        ? EPublicMessages.UserUnFollowed
+        : EPublicMessages.UserFollowed,
+    };
+  }
+
+  async verifyEmail(code: string) {
+    const { id: userId, new_email } = this.request.user;
+
+    const token = this.request.cookies?.[ECookieKeys.EmailOTP];
+    if (!token) throw new BadRequestException(EAuthMessages.CodeExpired);
+
+    const { email } = this.tokensService.verifyOTPToken<TEmailTokenPayload>(
+      token,
+      process.env.EMAIL_TOKEN_SECRET,
+      EAuthMessages.TryAgain,
+      BadRequestException,
+    );
+    if (email !== new_email) {
+      throw new BadRequestException(EBadRequestMessages.SomethingWentWrong);
+    }
+
+    const otp = await checkOTPValidation(
+      this.otpRepository,
+      userId,
+      code,
+      BadRequestException,
+    );
+    if (otp?.method !== EAuthMethod.Email) {
+      throw new BadRequestException(EBadRequestMessages.SomethingWentWrong);
+    }
+
+    await this.userRepository.update(
+      { id: userId },
+      { email, is_email_verified: true, new_email: null },
+    );
+
+    return {
+      message: EPublicMessages.UpdatedSuccessfully,
+    };
+  }
+
+  async verifyPhone(code: string) {
+    const { id: userId, new_phone } = this.request.user;
+
+    const token = this.request.cookies?.[ECookieKeys.PhoneOTP];
+    if (!token) throw new BadRequestException(EAuthMessages.CodeExpired);
+
+    const { phone } = this.tokensService.verifyOTPToken<TPhoneTokenPayload>(
+      token,
+      process.env.PHONE_TOKEN_SECRET,
+      EAuthMessages.TryAgain,
+      BadRequestException,
+    );
+    if (phone !== new_phone) {
+      throw new BadRequestException(EBadRequestMessages.SomethingWentWrong);
+    }
+
+    const otp = await checkOTPValidation(
+      this.otpRepository,
+      userId,
+      code,
+      BadRequestException,
+    );
+    if (otp?.method !== EAuthMethod.Phone) {
+      throw new BadRequestException(EBadRequestMessages.SomethingWentWrong);
+    }
+
+    await this.userRepository.update(
+      { id: userId },
+      { phone, is_phone_verified: true, new_phone: null },
+    );
+
+    return {
+      message: EPublicMessages.UpdatedSuccessfully,
+    };
+  }
+
+  async toggleBlock(blockDto: BlockDto) {
+    const { userId } = blockDto;
+
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException(ENotFoundMessages.NotFound);
+    }
+
+    const isBlocked = user.status === EUserStatus.Block;
+
+    if (isBlocked) {
+      await this.userRepository.update(
+        { id: userId },
+        { status: EUserStatus.Active },
+      );
+    } else {
+      await this.userRepository.update(
+        { id: userId },
+        { status: EUserStatus.Block },
+      );
+    }
+
+    return {
+      message: isBlocked
+        ? EPublicMessages.UserUnBlocked
+        : EPublicMessages.UserBlocked,
+    };
+  }
+
   async updateProfile(profileDto: ProfileDto, files: TProfileImages) {
     const { id: userId, profileId } = this.request.user;
 
@@ -302,42 +440,6 @@ export class UserService {
     };
   }
 
-  async verifyEmail(code: string) {
-    const { id: userId, new_email } = this.request.user;
-
-    const token = this.request.cookies?.[ECookieKeys.EmailOTP];
-    if (!token) throw new BadRequestException(EAuthMessages.CodeExpired);
-
-    const { email } = this.tokensService.verifyOTPToken<TEmailTokenPayload>(
-      token,
-      process.env.EMAIL_TOKEN_SECRET,
-      EAuthMessages.TryAgain,
-      BadRequestException,
-    );
-    if (email !== new_email) {
-      throw new BadRequestException(EBadRequestMessages.SomethingWentWrong);
-    }
-
-    const otp = await checkOTPValidation(
-      this.otpRepository,
-      userId,
-      code,
-      BadRequestException,
-    );
-    if (otp?.method !== EAuthMethod.Email) {
-      throw new BadRequestException(EBadRequestMessages.SomethingWentWrong);
-    }
-
-    await this.userRepository.update(
-      { id: userId },
-      { email, is_email_verified: true, new_email: null },
-    );
-
-    return {
-      message: EPublicMessages.UpdatedSuccessfully,
-    };
-  }
-
   async changePhone(phone: string) {
     const { id } = this.request.user;
     const user = await this.userRepository.findOneBy({ phone });
@@ -365,42 +467,6 @@ export class UserService {
     };
   }
 
-  async verifyPhone(code: string) {
-    const { id: userId, new_phone } = this.request.user;
-
-    const token = this.request.cookies?.[ECookieKeys.PhoneOTP];
-    if (!token) throw new BadRequestException(EAuthMessages.CodeExpired);
-
-    const { phone } = this.tokensService.verifyOTPToken<TPhoneTokenPayload>(
-      token,
-      process.env.PHONE_TOKEN_SECRET,
-      EAuthMessages.TryAgain,
-      BadRequestException,
-    );
-    if (phone !== new_phone) {
-      throw new BadRequestException(EBadRequestMessages.SomethingWentWrong);
-    }
-
-    const otp = await checkOTPValidation(
-      this.otpRepository,
-      userId,
-      code,
-      BadRequestException,
-    );
-    if (otp?.method !== EAuthMethod.Phone) {
-      throw new BadRequestException(EBadRequestMessages.SomethingWentWrong);
-    }
-
-    await this.userRepository.update(
-      { id: userId },
-      { phone, is_phone_verified: true, new_phone: null },
-    );
-
-    return {
-      message: EPublicMessages.UpdatedSuccessfully,
-    };
-  }
-
   async changeUsername(username: string) {
     const { id } = this.request.user;
     const user = await this.userRepository.findOneBy({ username });
@@ -417,41 +483,6 @@ export class UserService {
 
     return {
       message: EPublicMessages.UpdatedSuccessfully,
-    };
-  }
-
-  async toggleFollow(followingId: string) {
-    const { id: userId } = this.request.user;
-
-    if (userId === followingId) {
-      throw new BadRequestException(EBadRequestMessages.CannotFollowYourself);
-    }
-
-    const followingUser = await this.userRepository.findOneBy({
-      id: followingId,
-    });
-    if (!followingUser) {
-      throw new NotFoundException(ENotFoundMessages.NotFound);
-    }
-
-    const isFollowing = await this.followRepository.findOneBy({
-      followerId: userId,
-      followingId,
-    });
-
-    if (isFollowing) {
-      await this.followRepository.remove(isFollowing);
-    } else {
-      await this.followRepository.insert({
-        followingId,
-        followerId: userId,
-      });
-    }
-
-    return {
-      message: isFollowing
-        ? EPublicMessages.UserUnFollowed
-        : EPublicMessages.UserFollowed,
     };
   }
 }

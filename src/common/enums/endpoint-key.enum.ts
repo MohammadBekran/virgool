@@ -12,6 +12,7 @@ export enum EEndpointKeys {
   UpdateProfile = '',
   PostVerifyEmail = 'verify-email-otp',
   PostVerifyPhone = 'verify-phone',
+  ToggleBlock = 'toggle-block',
   PatchChangeEmail = 'change-email',
   PatchChangePhone = 'change-phone',
   PatchChangeUsername = 'change-username',

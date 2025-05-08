@@ -11,6 +11,8 @@ export enum EPublicMessages {
   CommentCreated = 'Comment has been created successfully',
   UserFollowed = 'User has been followed successfully',
   UserUnFollowed = 'User has been unfollowed successfully',
+  UserBlocked = 'User has been blocked successfully',
+  UserUnBlocked = 'User has been unblocked successfully',
 }
 
 export enum EBadRequestMessages {
@@ -54,4 +56,5 @@ export enum EValidationMessages {
 
 export enum EForbiddenMessages {
   AccessDenied = 'Access denied: insufficient role',
+  Blocked = 'Your account is blocked. Please connect to our support',
 }
