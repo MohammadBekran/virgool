@@ -12,7 +12,9 @@ import { isDate } from 'class-validator';
 import type { Request } from 'express';
 import { Repository } from 'typeorm';
 
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { ECookieKeys } from 'src/common/enums/cookie.enum';
+import { EEntityName } from 'src/common/enums/entity.enum';
 import {
   EAuthMessages,
   EBadRequestMessages,
@@ -20,13 +22,14 @@ import {
   ENotFoundMessages,
   EPublicMessages,
 } from 'src/common/enums/message.enum';
-import { EEntityName } from 'src/common/enums/entity.enum';
 import { checkOTPValidation } from 'src/common/utils/check-otp.util';
+import { paginate, paginationData } from 'src/common/utils/pagination.util';
 
 import { AuthService } from '../auth/auth.service';
 import { EAuthMethod } from '../auth/enums/method.enum';
 import { TokensService } from '../auth/tokens.service';
 import { ProfileDto } from './dto/profile.dto';
+import { FollowEntity } from './entities/follow.entity';
 import { OTPEntity } from './entities/otp.entity';
 import { ProfileEntity } from './entities/profile.entity';
 import { UserEntity } from './entities/user.entity';
@@ -36,7 +39,6 @@ import type {
   TEmailTokenPayload,
   TPhoneTokenPayload,
 } from './types/payload.type';
-import { FollowEntity } from './entities/follow.entity';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserService {
@@ -53,6 +55,159 @@ export class UserService {
     private authService: AuthService,
     private tokensService: TokensService,
   ) {}
+
+  async find(paginationDto: PaginationDto) {
+    const { page, limit, skip } = paginate(paginationDto);
+
+    const [users, count] = await this.userRepository.findAndCount({
+      where: {},
+      relations: {
+        profile: true,
+        followers: {
+          follower: {
+            profile: true,
+          },
+        },
+        followings: {
+          following: {
+            profile: true,
+          },
+        },
+      },
+      select: {
+        id: true,
+        username: true,
+        phone: true,
+        email: true,
+        roles: true,
+        created_at: true,
+        profile: {
+          id: true,
+          nick_name: true,
+          profile_image: true,
+          background_image: true,
+        },
+        followers: {
+          id: true,
+          follower: {
+            id: true,
+            username: true,
+            profile: {
+              id: true,
+              nick_name: true,
+              profile_image: true,
+              background_image: true,
+            },
+          },
+        },
+        followings: {
+          id: true,
+          following: {
+            id: true,
+            username: true,
+            profile: {
+              id: true,
+              nick_name: true,
+              profile_image: true,
+              background_image: true,
+            },
+          },
+        },
+      },
+      take: limit,
+      skip,
+      order: { created_at: 'DESC' },
+    });
+
+    return {
+      pagination: paginationData(count, page, limit),
+      users,
+    };
+  }
+
+  async profile() {
+    const { id } = this.request.user;
+
+    const user = await this.userRepository
+      .createQueryBuilder(EEntityName.User)
+      .where({ id })
+      .leftJoin('user.profile', 'profile')
+      .loadRelationCountAndMap('user.followers', 'user.followers')
+      .loadRelationCountAndMap('user.followings', 'user.followings')
+      .getOne();
+
+    return user;
+  }
+
+  async followers(paginationDto: PaginationDto) {
+    const { id: userId } = this.request.user;
+    const { page, limit, skip } = paginate(paginationDto);
+
+    const [followers, count] = await this.followRepository.findAndCount({
+      where: { followingId: userId },
+      relations: {
+        follower: {
+          profile: true,
+        },
+      },
+      select: {
+        follower: {
+          id: true,
+          username: true,
+          profile: {
+            id: true,
+            nick_name: true,
+            biography: true,
+            profile_image: true,
+            background_image: true,
+          },
+        },
+      },
+      skip,
+      take: limit,
+      order: { created_at: 'DESC' },
+    });
+
+    return {
+      pagination: paginationData(count, page, limit),
+      followers,
+    };
+  }
+
+  async followings(paginationDto: PaginationDto) {
+    const { id: userId } = this.request.user;
+    const { page, limit, skip } = paginate(paginationDto);
+
+    const [followings, count] = await this.followRepository.findAndCount({
+      where: { followerId: userId },
+      relations: {
+        following: {
+          profile: true,
+        },
+      },
+      select: {
+        following: {
+          id: true,
+          username: true,
+          profile: {
+            id: true,
+            nick_name: true,
+            biography: true,
+            profile_image: true,
+            background_image: true,
+          },
+        },
+      },
+      skip,
+      take: limit,
+      order: { created_at: 'DESC' },
+    });
+
+    return {
+      pagination: paginationData(count, page, limit),
+      followings,
+    };
+  }
 
   async updateProfile(profileDto: ProfileDto, files: TProfileImages) {
     const { id: userId, profileId } = this.request.user;
@@ -118,20 +273,6 @@ export class UserService {
     return {
       message: EPublicMessages.UpdatedSuccessfully,
     };
-  }
-
-  async profile() {
-    const { id } = this.request.user;
-
-    const user = await this.userRepository
-      .createQueryBuilder(EEntityName.User)
-      .where({ id })
-      .leftJoin('user.profile', 'profile')
-      .loadRelationCountAndMap('user.followers', 'user.followers')
-      .loadRelationCountAndMap('user.followings', 'user.followings')
-      .getOne();
-
-    return user;
   }
 
   async changeEmail(email: string) {

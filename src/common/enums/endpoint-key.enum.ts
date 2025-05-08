@@ -4,12 +4,16 @@ export enum EEndpointKeys {
   PostCheckOTP = 'check-otp',
   GetCheckLogin = 'check-login',
   // User
-  UpdateProfile = '',
+  GetFind = '',
   GetProfile = 'profile',
-  PatchChangeEmail = 'change-email',
+  Follow = 'follow/:followingId',
+  Followers = 'followers',
+  Followings = 'followings',
+  UpdateProfile = '',
   PostVerifyEmail = 'verify-email-otp',
-  PatchChangePhone = 'change-phone',
   PostVerifyPhone = 'verify-phone',
+  PatchChangeEmail = 'change-email',
+  PatchChangePhone = 'change-phone',
   PatchChangeUsername = 'change-username',
   // Category
   PostCreateCategory = '',
@@ -33,5 +37,4 @@ export enum EEndpointKeys {
   GetFindMyComments = 'my-comments',
   PatchAcceptComment = 'accept/:id',
   PatchRejectComment = 'reject/:id',
-  Follow = 'follow/:followingId',
 }
