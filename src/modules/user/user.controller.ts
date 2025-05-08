@@ -8,16 +8,13 @@ import {
   Put,
   Query,
   Res,
-  UseInterceptors,
 } from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiParam, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 
 import { AuthDecorator } from 'src/common/decorators/auth.decorator';
 import { Pagination } from 'src/common/decorators/pagination.decorator';
 import { RequiredRoles } from 'src/common/decorators/roles.decorator';
-import { UploadFile } from 'src/common/decorators/upload-file.decorator';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { EAPITagsName } from 'src/common/enums/api-tag.enum';
 import { EControllersName } from 'src/common/enums/controller.enum';
@@ -27,7 +24,6 @@ import { EPublicMessages } from 'src/common/enums/message.enum';
 import { ERole } from 'src/common/enums/role.enum';
 import { ESwaggerConsumes } from 'src/common/enums/swagger-consumes.enum';
 import { CookieOptions } from 'src/common/utils/cookie.util';
-import { multerStorage } from 'src/common/utils/multer.util';
 
 import { OTPDto } from '../auth/dto/auth.dto';
 import {
@@ -37,22 +33,10 @@ import {
   ChangeUsernameDto,
   ProfileDto,
 } from './dto/profile.dto';
-import type { TProfileImages } from './types/file.type';
 import { UserService } from './user.service';
 
 @Controller(EControllersName.User)
 @AuthDecorator()
-@UseInterceptors(
-  FileFieldsInterceptor(
-    [
-      { name: 'profile_image', maxCount: 1 },
-      { name: 'background_image', maxCount: 1 },
-    ],
-    {
-      storage: multerStorage('user-profile'),
-    },
-  ),
-)
 @ApiTags(EAPITagsName.User)
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -107,13 +91,9 @@ export class UserController {
   }
 
   @Put(EEndpointKeys.UpdateProfile)
-  @ApiConsumes(ESwaggerConsumes.FormData)
-  updateProfile(
-    @UploadFile()
-    files: TProfileImages,
-    @Body() profileDto: ProfileDto,
-  ) {
-    return this.userService.updateProfile(profileDto, files);
+  @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
+  updateProfile(@Body() profileDto: ProfileDto) {
+    return this.userService.updateProfile(profileDto);
   }
 
   @Patch(EEndpointKeys.PatchChangeEmail)

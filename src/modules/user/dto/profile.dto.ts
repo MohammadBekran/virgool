@@ -17,9 +17,9 @@ export class ProfileDto {
   nick_name: string;
   @ApiPropertyOptional()
   biography: string;
-  @ApiPropertyOptional({ format: 'binary' })
+  @ApiPropertyOptional()
   profile_image: string;
-  @ApiPropertyOptional({ format: 'binary' })
+  @ApiPropertyOptional()
   background_image: string;
   @ApiPropertyOptional({ enum: EGender })
   @IsEnum(EGender)

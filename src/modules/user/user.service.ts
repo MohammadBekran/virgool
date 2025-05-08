@@ -25,22 +25,21 @@ import {
 import { checkOTPValidation } from 'src/common/utils/check-otp.util';
 import { paginate, paginationData } from 'src/common/utils/pagination.util';
 
-import { AuthService } from '../auth/services/auth.service';
 import { EAuthMethod } from '../auth/enums/method.enum';
+import { AuthService } from '../auth/services/auth.service';
 import { TokenService } from '../auth/services/token.service';
+import { TGoogleUser } from '../auth/types/response.type';
 import { BlockDto, ProfileDto } from './dto/profile.dto';
 import { FollowEntity } from './entities/follow.entity';
 import { OTPEntity } from './entities/otp.entity';
 import { ProfileEntity } from './entities/profile.entity';
 import { UserEntity } from './entities/user.entity';
 import { EGender } from './enums/gender.enum';
-import type { TProfileImages } from './types/file.type';
+import { EUserStatus } from './enums/status.enum';
 import type {
   TEmailTokenPayload,
   TPhoneTokenPayload,
 } from './types/payload.type';
-import { EUserStatus } from './enums/status.enum';
-import { TGoogleUser } from '../auth/types/response.type';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserService {
@@ -134,7 +133,7 @@ export class UserService {
     const user = await this.userRepository
       .createQueryBuilder(EEntityName.User)
       .where({ id })
-      .leftJoin('user.profile', 'profile')
+      .leftJoinAndSelect('user.profile', 'profile')
       .loadRelationCountAndMap('user.followers', 'user.followers')
       .loadRelationCountAndMap('user.followings', 'user.followings')
       .getOne();
@@ -348,19 +347,8 @@ export class UserService {
     };
   }
 
-  async updateProfile(profileDto: ProfileDto, files: TProfileImages) {
+  async updateProfile(profileDto: ProfileDto) {
     const { id: userId, profileId } = this.request.user;
-
-    if (files?.profile_image?.length > 0) {
-      const [image] = files.profile_image;
-
-      profileDto.profile_image = image?.path?.slice(7);
-    }
-    if (files?.background_image?.length > 0) {
-      const [image] = files.background_image;
-
-      profileDto.background_image = image?.path?.slice(7);
-    }
 
     const {
       nick_name,
@@ -369,8 +357,8 @@ export class UserService {
       birthday,
       linkedin_profile,
       x_profile,
-      background_image,
       profile_image,
+      background_image,
     } = profileDto;
 
     let profile = await this.profileRepository.findOneBy({
@@ -394,8 +382,8 @@ export class UserService {
         birthday,
         linkedin_profile,
         x_profile,
-        background_image,
         profile_image,
+        background_image,
         userId,
       });
     }

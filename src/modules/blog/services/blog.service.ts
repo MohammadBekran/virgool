@@ -50,7 +50,7 @@ export class BlogService {
 
   async create(blogDto: CreateBlogDto) {
     const { id: userId } = this.request.user;
-    let { title, slug, description, content, time_to_read, categories } =
+    let { title, slug, description, content, time_to_read, categories, image } =
       blogDto;
 
     if (!isArray(categories) && typeof categories === 'string') {
@@ -58,7 +58,9 @@ export class BlogService {
     } else if (!isArray(categories)) categories = [];
 
     slug = slugify(slug ?? title);
-    const existBlog = await this.findOne(null, slug);
+    const existBlog = await this.blogRepository.findOneBy({
+      slug: slug,
+    });
     if (existBlog) {
       slug += `-${generateRandomID()}`;
     }
@@ -71,6 +73,7 @@ export class BlogService {
       description,
       content,
       time_to_read,
+      image,
     });
     blog = await this.blogRepository.save(blog);
 
@@ -206,12 +209,10 @@ export class BlogService {
       slug = slugify(finalSlug);
 
       const existBlog = await this.findOne(null, slug);
-      console.log(existBlog, existBlog?.id !== id);
       if (existBlog && existBlog.id !== id) {
         blog.slug += `-${generateRandomID()}`;
       }
     }
-    console.log(finalSlug);
     if (description) blog.description = description;
     if (content) blog.content = content;
     if (time_to_read) blog.time_to_read = time_to_read;
@@ -388,8 +389,6 @@ export class BlogService {
           });
         },
       );
-
-    console.log(hello.getSql());
 
     if (!blog) {
       throw new NotFoundException(ENotFoundMessages.NotFound);
