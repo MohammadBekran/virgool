@@ -27,6 +27,7 @@ import { CookieOptions } from 'src/common/utils/cookie.util';
 
 import { OTPDto } from '../auth/dto/auth.dto';
 import {
+  AddOrRemoveRoleFromUser,
   BlockDto,
   ChangeEmailDto,
   ChangePhoneDto,
@@ -53,22 +54,42 @@ export class UserController {
     return this.userService.profile();
   }
 
-  @Get(EEndpointKeys.Followers)
+  @Get(EEndpointKeys.GetFollowers)
   @Pagination()
   followers(@Query() paginationDto: PaginationDto) {
     return this.userService.followers(paginationDto);
   }
 
-  @Get(EEndpointKeys.Followings)
+  @Get(EEndpointKeys.GetFollowings)
   @Pagination()
   followings(@Query() paginationDto: PaginationDto) {
     return this.userService.followings(paginationDto);
   }
 
-  @Get(EEndpointKeys.Follow)
+  @Get(EEndpointKeys.GetFollow)
   @ApiParam({ name: 'followingId' })
   follow(@Param('followingId') followingId: string) {
     return this.userService.toggleFollow(followingId);
+  }
+
+  @Get(EEndpointKeys.GetRoles)
+  @RequiredRoles(ERole.Admin)
+  roles() {
+    return this.userService.roles();
+  }
+
+  @Patch(EEndpointKeys.PatchAddRoleToUser)
+  @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
+  @RequiredRoles(ERole.Admin)
+  addRoleToUser(@Body() addRoleToUserDto: AddOrRemoveRoleFromUser) {
+    return this.userService.addRoleToUser(addRoleToUserDto);
+  }
+
+  @Patch(EEndpointKeys.PatchRemoveRoleFromUser)
+  @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
+  @RequiredRoles(ERole.Admin)
+  removeRoleFromUser(@Body() removeRoleFromUserDto: AddOrRemoveRoleFromUser) {
+    return this.userService.removeRoleFromUser(removeRoleFromUserDto);
   }
 
   @Post(EEndpointKeys.PostVerifyEmail)

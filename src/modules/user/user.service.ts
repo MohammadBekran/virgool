@@ -22,6 +22,7 @@ import {
   ENotFoundMessages,
   EPublicMessages,
 } from 'src/common/enums/message.enum';
+import { ERole } from 'src/common/enums/role.enum';
 import { checkOTPValidation } from 'src/common/utils/check-otp.util';
 import { paginate, paginationData } from 'src/common/utils/pagination.util';
 
@@ -29,7 +30,11 @@ import { EAuthMethod } from '../auth/enums/method.enum';
 import { AuthService } from '../auth/services/auth.service';
 import { TokenService } from '../auth/services/token.service';
 import { TGoogleUser } from '../auth/types/response.type';
-import { BlockDto, ProfileDto } from './dto/profile.dto';
+import {
+  AddOrRemoveRoleFromUser,
+  BlockDto,
+  ProfileDto,
+} from './dto/profile.dto';
 import { FollowEntity } from './entities/follow.entity';
 import { OTPEntity } from './entities/otp.entity';
 import { ProfileEntity } from './entities/profile.entity';
@@ -208,6 +213,70 @@ export class UserService {
     return {
       pagination: paginationData(count, page, limit),
       followings,
+    };
+  }
+
+  roles() {
+    return {
+      roles: Object.values(ERole),
+    };
+  }
+
+  async addRoleToUser(addRoleToUserDto: AddOrRemoveRoleFromUser) {
+    const { userId, role } = addRoleToUserDto;
+
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException(ENotFoundMessages.NotFound);
+    }
+
+    if (!Object.values(ERole).includes(role)) {
+      throw new BadRequestException(EBadRequestMessages.InvalidRole);
+    }
+
+    if (user.roles.includes(role)) {
+      throw new BadRequestException(
+        EBadRequestMessages.UserAlreadyHasSelectedRole,
+      );
+    }
+
+    await this.userRepository.update(
+      { id: userId },
+      {
+        roles: [...user.roles, role],
+      },
+    );
+
+    return {
+      message: EPublicMessages.RoleAdded,
+    };
+  }
+
+  async removeRoleFromUser(removeRoleFromUserDto: AddOrRemoveRoleFromUser) {
+    const { userId, role } = removeRoleFromUserDto;
+
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException(ENotFoundMessages.NotFound);
+    }
+
+    if (!Object.values(ERole).includes(role)) {
+      throw new BadRequestException(EBadRequestMessages.InvalidRole);
+    }
+
+    if (!user.roles.includes(role)) {
+      throw new BadRequestException(EBadRequestMessages.UserDoesNotHasThisRole);
+    }
+
+    await this.userRepository.update(
+      { id: userId },
+      {
+        roles: user.roles.filter((userRole) => userRole !== role),
+      },
+    );
+
+    return {
+      message: EPublicMessages.RoleRemoved,
     };
   }
 

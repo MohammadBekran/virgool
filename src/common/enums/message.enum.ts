@@ -13,12 +13,17 @@ export enum EPublicMessages {
   UserUnFollowed = 'User has been unfollowed successfully',
   UserBlocked = 'User has been blocked successfully',
   UserUnBlocked = 'User has been unblocked successfully',
+  RoleAdded = 'Role has been added to this user successfully',
+  RoleRemoved = 'Role has been removed from this user successfully',
 }
 
 export enum EBadRequestMessages {
   RegisterUsernameExists = 'You cannot set your username directly',
   SomethingWentWrong = 'Something went wrong',
   InvalidID = 'Invalid id',
+  InvalidRole = 'Invalid role',
+  UserAlreadyHasSelectedRole = 'User already has this role',
+  UserDoesNotHasThisRole = 'User does not has this role',
   CommentAlreadyAccepted = 'Comment already accepted',
   CommentAlreadyRejected = 'Comment already rejected',
   CannotFollowYourself = 'You cannot follow yourself',

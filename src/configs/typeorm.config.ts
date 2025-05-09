@@ -1,4 +1,5 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { join } from 'path';
 
 export function TypeOrmConfig(): TypeOrmModuleOptions {
   const { DB_HOST, DB_NAME, DB_PORT, DB_USERNAME, DB_PASSWORD } = process.env;
@@ -11,8 +12,11 @@ export function TypeOrmConfig(): TypeOrmModuleOptions {
     username: DB_USERNAME,
     password: DB_PASSWORD,
     ssl: true,
-    autoLoadEntities: true,
-    synchronize: true,
-    entities: [__dirname + '/../**/*.entity{.ts, .js}'],
+    autoLoadEntities: false,
+    synchronize: false,
+    entities: [
+      join(__dirname, '..', '**', '*.entity.ts'),
+      join(__dirname, '..', '**', '*.entity.js'),
+    ],
   };
 }

@@ -9,6 +9,7 @@ import {
 } from 'class-validator';
 
 import { EValidationMessages } from 'src/common/enums/message.enum';
+import { ERole } from 'src/common/enums/role.enum';
 
 import { EGender } from '../enums/gender.enum';
 
@@ -55,4 +56,12 @@ export class BlockDto {
   @ApiProperty()
   @IsUUID()
   userId: string;
+}
+
+export class AddOrRemoveRoleFromUser {
+  @ApiProperty()
+  @IsUUID()
+  userId: string;
+  @ApiProperty({ enum: ERole })
+  role: ERole;
 }
