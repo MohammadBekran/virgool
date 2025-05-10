@@ -1,98 +1,176 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 📘 Virgool Backend API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A scalable, production-ready blogging platform backend built with **NestJS**, **TypeORM**, and **PostgreSQL**, featuring user authentication (including Google OAuth), blogging, commenting, and role-based access control. Deployed seamlessly to **Railway** with Neon as the Postgres provider.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+🌐 **Live API Docs**: [https://virgool-production.up.railway.app/swagger](https://virgool-production.up.railway.app/swagger)
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🚀 Tech Stack
 
-## Project setup
+- **Framework:** [NestJS](https://nestjs.com/)
+- **ORM:** [TypeORM](https://typeorm.io/)
+- **Database:** [PostgreSQL](https://www.postgresql.org/) via [Neon](https://neon.tech/)
+- **Deployment:** [Railway](https://railway.app/)
+- **Authentication:** JWT + Google OAuth 2.0
+- **Validation:** class-validator & class-transformer
+- **Docs:** Swagger
 
-```bash
-$ npm install
-```
+---
 
-## Compile and run the project
+## 📦 Features
 
-```bash
-# development
-$ npm run start
+- ✅ **User Authentication** (OTP-based + Google OAuth)
+- ✅ **Blog CRUD operations** with slugs and bookmarks
+- ✅ **Category Management**
+- ✅ **Comment moderation**
+- ✅ **Followers/Following system**
+- ✅ **Role-based access control**
+- ✅ **Block/Unblock users**
+- ✅ **Clean architecture with modular NestJS design**
+- ✅ **Fully containerized and CI/CD ready**
 
-# watch mode
-$ npm run start:dev
+---
 
-# production mode
-$ npm run start:prod
-```
-
-## Run tests
+## 🛠️ Installation
 
 ```bash
-# unit tests
-$ npm run test
+git clone https://github.com/MohammadBekran/virgool.git
+cd virgool
+cp .env.example .env
+npm install
+npm run migration:run
+npm run start:dev
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
 ```
 
-## Deployment
+---
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## 🌐 API Endpoints
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+All endpoints are prefixed with `/api` (or your chosen global prefix).
+
+### 🔐 Auth
+
+| Method | Endpoint               | Description                              |
+| ------ | ---------------------- | ---------------------------------------- |
+| POST   | `/auth/user-existence` | Check if user exists & Send OTP          |
+| POST   | `/auth/check-otp`      | Verify OTP                               |
+| GET    | `/auth/check-login`    | Check login status & Current Return User |
+| GET    | `/auth/google`         | Initiate Google OAuth                    |
+| GET    | `/auth/redirect`       | Handle Google redirect                   |
+
+### 👤 User
+
+| Method | Endpoint                      | Description                        |
+| ------ | ----------------------------- | ---------------------------------- |
+| GET    | `/user/profile`               | Get current user profile           |
+| PATCH  | `/user/change-email`          | Change user email                  |
+| PATCH  | `/user/change-phone`          | Change phone number                |
+| PATCH  | `/user/change-username`       | Change username                    |
+| PATCH  | `/user/add-role-to-user`      | Add role to user (Admin only)      |
+| PATCH  | `/user/remove-role-from-user` | Remove role from user (Admin only) |
+| POST   | `/user/verify-email-otp`      | Verify email with OTP              |
+| POST   | `/user/verify-phone`          | Verify phone number                |
+| POST   | `/user/toggle-block`          | Block/unblock user (Admin only)    |
+| GET    | `/user/follow/:followingId`   | Follow a user                      |
+| GET    | `/user/followers`             | List followers                     |
+| GET    | `/user/followings`            | List followings                    |
+| GET    | `/user/roles`                 | Get available roles (Admin only)   |
+
+### 🗂️ Category
+
+| Method | Endpoint        | Description         |
+| ------ | --------------- | ------------------- |
+| POST   | `/category`     | Create new category |
+| GET    | `/category`     | Get all categories  |
+| GET    | `/category/:id` | Get category by ID  |
+| PATCH  | `/category/:id` | Update category     |
+| DELETE | `/category/:id` | Delete category     |
+
+### 📝 Blog
+
+| Method | Endpoint              | Description                |
+| ------ | --------------------- | -------------------------- |
+| POST   | `/blog`               | Create a blog              |
+| GET    | `/blog/my-blogs`      | Get logged-in user's blogs |
+| GET    | `/blog`               | Get all blogs              |
+| GET    | `/blog/by-id/:id`     | Get blog by ID             |
+| GET    | `/blog/by-slug/:slug` | Get blog by slug           |
+| DELETE | `/blog/:id`           | Delete a blog              |
+| PUT    | `/blog/:id`           | Update a blog              |
+| GET    | `/blog/like/:id`      | Like/Unlike a blog         |
+| GET    | `/blog/bookmark/:id`  | Bookmark/Unbookmark blog   |
+
+### 💬 Comment
+
+| Method | Endpoint               | Description                 |
+| ------ | ---------------------- | --------------------------- |
+| POST   | `/comment`             | Create comment              |
+| GET    | `/comment`             | Get all comments            |
+| GET    | `/comment/my-comments` | Get user's comments         |
+| PATCH  | `/comment/accept/:id`  | Accept comment (Admin only) |
+| PATCH  | `/comment/reject/:id`  | Reject comment (Admin only) |
+
+---
+
+## 🛠 Folder Structure
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+src/
+├── main.ts
+├── configs/
+│   ├── swagger.config.ts
+│   ├── typeorm.config.ts
+│   └── typeorm.ts
+├── migrations/
+├── modules/
+│   ├── app/
+│   ├── auth/
+│   ├── blog/
+│   ├── category/
+│   ├── image/
+│   └── user/
+└── common/
+    ├── abstracts/
+    ├── constants/
+    ├── utils/
+    ├── decorators/
+    ├── middlewares/
+    ├── dtos/
+    ├── enums/
+    ├── interceptors/
+    └── types/
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+## 🌍 Deployment
 
-Check out a few resources that may come in handy when working with NestJS:
+> This app is deployed on [Railway](https://railway.app) with PostgreSQL provided by [Neon](https://neon.tech). Environment variables are managed securely via `.env`.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+---
 
-## Support
+## 📄 License
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+This project is **UNLICENSED** – intended for personal showcase and academic use.
 
-## Stay in touch
+---
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## 🤝 Contributing
 
-## License
+You're welcome to fork the repo or open issues for suggestions or improvements. Feel free to reach out via LinkedIn or email.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+---
+
+## 📬 Contact
+
+**Email** – [bhshtmhmd1@gmail.com]  
+**GitHub** – [@MohammadBekran](https://github.com/MohammadBekran)  
+**LinkedIn** – [www.linkedin.com/in/mohamamd-bekran](www.linkedin.com/in/mohamamd-bekran)
+
+---
+
+## 🔖 Tags
+
+#NestJS #TypeORM #PostgreSQL #Railway #Neon #Backend #BlogAPI #OAuth #Swagger #RESTAPI
