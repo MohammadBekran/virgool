@@ -18,6 +18,7 @@ import {
   EPublicMessages,
 } from 'src/common/enums/message.enum';
 import { paginate, paginationData } from 'src/common/utils/pagination.util';
+import { EUserStatus } from 'src/modules/user/enums/status.enum';
 
 import { CreateCommentDto } from '../dto/comment.dto';
 import { BlogCommentEntity } from '../entities/comment.entity';
@@ -129,7 +130,12 @@ export class BlogCommentService {
     limit: number,
   ) {
     return await this.blogCommentRepository.findAndCount({
-      where,
+      where: {
+        user: {
+          status: EUserStatus.Active,
+        },
+        ...where
+      },
       relations: {
         user: { profile: true },
         blog: true,
@@ -155,7 +161,7 @@ export class BlogCommentService {
     const { page, limit, skip } = paginate(paginationDto);
 
     const [comments, count] = await this.blogCommentRepository.findAndCount({
-      where: { blogId, parentId: IsNull() },
+      where: { blogId, parentId: IsNull(), user: {status: EUserStatus.Active} },
       relations: {
         user: { profile: true },
         replies: {

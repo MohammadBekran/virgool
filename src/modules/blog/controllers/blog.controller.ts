@@ -7,6 +7,7 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 
@@ -22,6 +23,7 @@ import { ESwaggerConsumes } from 'src/common/enums/swagger-consumes.enum';
 
 import { CreateBlogDto, FilterBlogDto, UpdateBlogDto } from '../dto/blog.dto';
 import { BlogService } from '../services/blog.service';
+import { OptionalAuthMiddleware } from 'src/common/middlewares/auth.middleware';
 
 @Controller(EControllersName.Blog)
 @ApiTags(EAPITagsName.Blog)
@@ -36,12 +38,18 @@ export class BlogController {
   }
 
   @Get(EEndpointKeys.GetMyBlogs)
-  getMyBlogs() {
-    return this.blogService.getMyBlogs();
+  @Pagination()
+  @FilterBlog()
+  getMyBlogs(
+    @Query() paginationDto: PaginationDto,
+    @Query() filterDto: FilterBlogDto,
+  ) {
+    return this.blogService.getMyBlogs(paginationDto, filterDto);
   }
 
   @Get(EEndpointKeys.GetBlogs)
   @SkipAuth()
+  @UseGuards(OptionalAuthMiddleware)
   @Pagination()
   @FilterBlog()
   find(
@@ -60,6 +68,7 @@ export class BlogController {
 
   @Get(EEndpointKeys.GetBlogBySlug)
   @SkipAuth()
+  @UseGuards(OptionalAuthMiddleware)
   @Pagination()
   findOneBySlug(
     @Param('slug') slug: string,

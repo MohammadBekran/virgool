@@ -222,64 +222,6 @@ export class UserService {
     };
   }
 
-  async addRoleToUser(addRoleToUserDto: AddOrRemoveRoleFromUser) {
-    const { userId, role } = addRoleToUserDto;
-
-    const user = await this.userRepository.findOneBy({ id: userId });
-    if (!user) {
-      throw new NotFoundException(ENotFoundMessages.NotFound);
-    }
-
-    if (!Object.values(ERole).includes(role)) {
-      throw new BadRequestException(EBadRequestMessages.InvalidRole);
-    }
-
-    if (user.roles.includes(role)) {
-      throw new BadRequestException(
-        EBadRequestMessages.UserAlreadyHasSelectedRole,
-      );
-    }
-
-    await this.userRepository.update(
-      { id: userId },
-      {
-        roles: [...user.roles, role],
-      },
-    );
-
-    return {
-      message: EPublicMessages.RoleAdded,
-    };
-  }
-
-  async removeRoleFromUser(removeRoleFromUserDto: AddOrRemoveRoleFromUser) {
-    const { userId, role } = removeRoleFromUserDto;
-
-    const user = await this.userRepository.findOneBy({ id: userId });
-    if (!user) {
-      throw new NotFoundException(ENotFoundMessages.NotFound);
-    }
-
-    if (!Object.values(ERole).includes(role)) {
-      throw new BadRequestException(EBadRequestMessages.InvalidRole);
-    }
-
-    if (!user.roles.includes(role)) {
-      throw new BadRequestException(EBadRequestMessages.UserDoesNotHasThisRole);
-    }
-
-    await this.userRepository.update(
-      { id: userId },
-      {
-        roles: user.roles.filter((userRole) => userRole !== role),
-      },
-    );
-
-    return {
-      message: EPublicMessages.RoleRemoved,
-    };
-  }
-
   async toggleFollow(followingId: string) {
     const { id: userId } = this.request.user;
 
@@ -390,10 +332,7 @@ export class UserService {
   async toggleBlock(blockDto: BlockDto) {
     const { userId } = blockDto;
 
-    const user = await this.userRepository.findOneBy({ id: userId });
-    if (!user) {
-      throw new NotFoundException(ENotFoundMessages.NotFound);
-    }
+    const user = await this.findOne(userId);
 
     const isBlocked = user.status === EUserStatus.Block;
 
@@ -468,6 +407,58 @@ export class UserService {
 
     return {
       message: EPublicMessages.UpdatedSuccessfully,
+    };
+  }
+
+  async addRoleToUser(addRoleToUserDto: AddOrRemoveRoleFromUser) {
+    const { userId, role } = addRoleToUserDto;
+
+    const user = await this.findOne(userId);
+
+    if (!Object.values(ERole).includes(role)) {
+      throw new BadRequestException(EBadRequestMessages.InvalidRole);
+    }
+
+    if (user.roles.includes(role)) {
+      throw new BadRequestException(
+        EBadRequestMessages.UserAlreadyHasSelectedRole,
+      );
+    }
+
+    await this.userRepository.update(
+      { id: userId },
+      {
+        roles: [...user.roles, role],
+      },
+    );
+
+    return {
+      message: EPublicMessages.RoleAdded,
+    };
+  }
+
+  async removeRoleFromUser(removeRoleFromUserDto: AddOrRemoveRoleFromUser) {
+    const { userId, role } = removeRoleFromUserDto;
+
+    const user = await this.findOne(userId);
+
+    if (!Object.values(ERole).includes(role)) {
+      throw new BadRequestException(EBadRequestMessages.InvalidRole);
+    }
+
+    if (!user.roles.includes(role)) {
+      throw new BadRequestException(EBadRequestMessages.UserDoesNotHasThisRole);
+    }
+
+    await this.userRepository.update(
+      { id: userId },
+      {
+        roles: user.roles.filter((userRole) => userRole !== role),
+      },
+    );
+
+    return {
+      message: EPublicMessages.RoleRemoved,
     };
   }
 
@@ -586,5 +577,14 @@ export class UserService {
       message: EPublicMessages.LoggedInSuccessfully,
       accessToken,
     };
+  }
+
+  async findOne(id: string) {
+    const user = await this.userRepository.findOneBy({ id });
+    if (!user) {
+      throw new NotFoundException(ENotFoundMessages.NotFound);
+    }
+
+    return user;
   }
 }

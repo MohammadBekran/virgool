@@ -21,6 +21,7 @@ import {
 } from 'src/common/enums/message.enum';
 import { generateRandomID } from 'src/common/utils/helper.util';
 import { paginate, paginationData } from 'src/common/utils/pagination.util';
+import { EUserStatus } from 'src/modules/user/enums/status.enum';
 
 import { CategoryService } from '../../category/category.service';
 import { CreateBlogDto, FilterBlogDto, UpdateBlogDto } from '../dto/blog.dto';
@@ -30,6 +31,7 @@ import { BlogBookmarkEntity } from '../entities/bookmark.entity';
 import { BlogLikeEntity } from '../entities/like.entity';
 import { EBlogStatus } from '../enums/status.enum';
 import { BlogCommentService } from './comment.service';
+import { ERole } from 'src/common/enums/role.enum';
 
 @Injectable({ scope: Scope.REQUEST })
 export class BlogService {
@@ -78,18 +80,15 @@ export class BlogService {
     blog = await this.blogRepository.save(blog);
 
     for (const categoryTitle of categories) {
-      const category = await this.categoryService.findOneByTitle(categoryTitle);
-
+      let category = await this.categoryService.findOneByTitle(categoryTitle);
       if (!category) {
-        await this.categoryService.createByTitle(categoryTitle);
-      } else {
-        const blogCategory = this.blogCategoryRepository.create({
-          blogId: blog.id,
-          categoryId: category.id,
-        });
-
-        await this.blogCategoryRepository.save(blogCategory);
+        category = await this.categoryService.createByTitle(categoryTitle);
       }
+
+      this.blogCategoryRepository.insert({
+        blogId: blog.id,
+        categoryId: category.id,
+      });
     }
 
     return {
@@ -97,67 +96,29 @@ export class BlogService {
     };
   }
 
-  async getMyBlogs() {
+  async getMyBlogs(paginationDto: PaginationDto, filterDto: FilterBlogDto) {
     const { id: userId } = this.request.user;
 
-    const blogs = await this.blogRepository.find({
-      where: { authorId: userId },
-    });
+    const { pagination, blogs } =
+      await this.findBlogsWithPaginationAndFiltering(
+        paginationDto,
+        filterDto,
+        'blog."authorId" = :userId',
+        { userId: userId },
+      );
 
-    return blogs;
+    return {
+      pagination,
+      blogs,
+    };
   }
 
   async find(paginationDto: PaginationDto, filterDto: FilterBlogDto) {
-    const { page, limit, skip } = paginate(paginationDto);
-    let { category, search } = filterDto;
-
-    let where = '';
-
-    if (category) {
-      if (where.length > 0) where += ' AND ';
-      category = category.toLowerCase();
-
-      where += 'LOWER(category.title) = :category';
-    }
-
-    if (search) {
-      if (where.length > 0) where += ' AND ';
-
-      search = `%${search}%`;
-      where +=
-        'CONCAT(blog.title, blog.description, blog.content) ILIKE :search';
-    }
-
-    const [blogs, count] = await this.blogRepository
-      .createQueryBuilder(EEntityName.Blog)
-      .leftJoin('blog.categories', 'categories')
-      .leftJoin('categories.category', 'category')
-      .leftJoin('blog.author', 'author')
-      .leftJoin('author.profile', 'profile')
-      .addSelect([
-        'categories.id',
-        'category.title',
-        'author.username',
-        'profile.nick_name',
-      ])
-      .where(where, { category, search })
-      .loadRelationCountAndMap('blog.likes', 'blog.likes')
-      .loadRelationCountAndMap('blog.bookmarks', 'blog.bookmarks')
-      .loadRelationCountAndMap(
-        'blog.comments',
-        'blog.comments',
-        'comments',
-        (qb) => {
-          return qb.where('comments.accepted = :accepted', { accepted: true });
-        },
-      )
-      .orderBy('blog.created_at', 'DESC')
-      .skip(skip)
-      .limit(limit)
-      .getManyAndCount();
+    const { pagination, blogs } =
+      await this.findBlogsWithPaginationAndFiltering(paginationDto, filterDto);
 
     return {
-      pagination: paginationData(count, page, limit),
+      pagination,
       blogs,
     };
   }
@@ -166,6 +127,9 @@ export class BlogService {
     const blog = await this.blogRepository.findOneBy({
       id: id ?? undefined,
       slug: slug ?? undefined,
+      author: {
+        status: EUserStatus.Active,
+      },
     });
 
     if (!blog) {
@@ -336,6 +300,9 @@ export class BlogService {
     paginationDto?: PaginationDto,
   ) {
     const userId = this.request?.user?.id;
+    const roles = this.request?.user?.roles;
+
+    const isAdmin = roles?.includes(ERole.Admin);
 
     const blog = await this.blogRepository
       .createQueryBuilder(EEntityName.Blog)
@@ -347,6 +314,7 @@ export class BlogService {
         'categories.id',
         'category.title',
         'author.username',
+        'author.status',
         'profile.nick_name',
       ])
       .where(where, parameters)
@@ -364,35 +332,14 @@ export class BlogService {
       )
       .getOne();
 
-    const hello = await this.blogRepository
-      .createQueryBuilder(EEntityName.Blog)
-      .leftJoin('blog.categories', 'categories')
-      .leftJoin('categories.category', 'category')
-      .leftJoin('blog.author', 'author')
-      .leftJoin('author.profile', 'profile')
-      .addSelect([
-        'categories.id',
-        'category.title',
-        'author.username',
-        'profile.nick_name',
-      ])
-      .where(where, parameters)
-      .loadRelationCountAndMap('blog.likes', 'blog.likes')
-      .loadRelationCountAndMap('blog.bookmarks', 'blog.bookmarks')
-      .loadRelationCountAndMap(
-        'blog.comments',
-        'blog.comments',
-        'comments',
-        (qb) => {
-          return qb.where('comments.accepted = :accepted', {
-            accepted: true,
-          });
-        },
-      );
-
-    if (!blog) {
+    if (!blog || (!isAdmin && blog.author.status === EUserStatus.Block)) {
       throw new NotFoundException(ENotFoundMessages.NotFound);
     }
+
+    const {
+      author: { status },
+      ...newBlog
+    } = blog;
 
     const blogId = blog.id;
 
@@ -451,11 +398,86 @@ export class BlogService {
     );
 
     return {
-      blog,
+      blog: newBlog,
       isLiked: isLiked ?? false,
       isBookmarked: isBookmarked ?? false,
       comments,
       suggestedBlogs,
+    };
+  }
+
+  async findBlogsWithPaginationAndFiltering(
+    paginationDto: PaginationDto,
+    filterDto: FilterBlogDto,
+    findWhere?: string,
+    findWhereParameters: object = {},
+  ) {
+    const userRoles = this?.request?.user?.roles;
+    const { page, limit, skip } = paginate(paginationDto);
+    let { category, search } = filterDto;
+
+    let where = 'author.status = :activeUser';
+
+    if (userRoles && userRoles?.includes(ERole.Admin)) {
+      where = '';
+    }
+
+    if (category) {
+      if (where.length > 0) where += ' AND ';
+      category = category.toLowerCase();
+
+      where += 'LOWER(category.title) = :category';
+    }
+
+    if (search) {
+      if (where.length > 0) where += ' AND ';
+
+      search = `%${search}%`;
+      where +=
+        'CONCAT(blog.title, blog.description, blog.content) ILIKE :search';
+    }
+
+    if (findWhere) {
+      if (where.length > 0) where += ' AND ';
+      where += findWhere;
+    }
+
+    const [blogs, count] = await this.blogRepository
+      .createQueryBuilder(EEntityName.Blog)
+      .leftJoin('blog.categories', 'categories')
+      .leftJoin('categories.category', 'category')
+      .leftJoin('blog.author', 'author')
+      .leftJoin('author.profile', 'profile')
+      .addSelect([
+        'categories.id',
+        'category.title',
+        'author.username',
+        'profile.nick_name',
+      ])
+      .where(where, {
+        activeUser: EUserStatus.Active,
+        category,
+        search,
+        ...findWhereParameters,
+      })
+      .loadRelationCountAndMap('blog.likes', 'blog.likes')
+      .loadRelationCountAndMap('blog.bookmarks', 'blog.bookmarks')
+      .loadRelationCountAndMap(
+        'blog.comments',
+        'blog.comments',
+        'comments',
+        (qb) => {
+          return qb.where('comments.accepted = :accepted', { accepted: true });
+        },
+      )
+      .orderBy('blog.created_at', 'DESC')
+      .skip(skip)
+      .limit(limit)
+      .getManyAndCount();
+
+    return {
+      pagination: paginationData(count, page, limit),
+      blogs,
     };
   }
 }

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AuthModule } from '../auth/auth.module';
@@ -13,6 +13,8 @@ import { BlogCommentEntity } from './entities/comment.entity';
 import { BlogLikeEntity } from './entities/like.entity';
 import { BlogService } from './services/blog.service';
 import { BlogCommentService } from './services/comment.service';
+import { OptionalAuthMiddleware } from 'src/common/middlewares/auth.middleware';
+import { EEndpointKeys } from 'src/common/enums/endpoint-key.enum';
 
 @Module({
   imports: [
@@ -32,4 +34,14 @@ import { BlogCommentService } from './services/comment.service';
   controllers: [BlogController, BlogCommentController],
   providers: [BlogService, CategoryService, BlogCommentService],
 })
-export class BlogModule {}
+export class BlogModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(OptionalAuthMiddleware)
+      .forRoutes(
+        EEndpointKeys.GetBlogs,
+        EEndpointKeys.GetBlogByID,
+        EEndpointKeys.GetBlogBySlug,
+      );
+  }
+}

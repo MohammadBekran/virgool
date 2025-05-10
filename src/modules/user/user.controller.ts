@@ -78,20 +78,6 @@ export class UserController {
     return this.userService.roles();
   }
 
-  @Patch(EEndpointKeys.PatchAddRoleToUser)
-  @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
-  @RequiredRoles(ERole.Admin)
-  addRoleToUser(@Body() addRoleToUserDto: AddOrRemoveRoleFromUser) {
-    return this.userService.addRoleToUser(addRoleToUserDto);
-  }
-
-  @Patch(EEndpointKeys.PatchRemoveRoleFromUser)
-  @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
-  @RequiredRoles(ERole.Admin)
-  removeRoleFromUser(@Body() removeRoleFromUserDto: AddOrRemoveRoleFromUser) {
-    return this.userService.removeRoleFromUser(removeRoleFromUserDto);
-  }
-
   @Post(EEndpointKeys.PostVerifyEmail)
   @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
   verifyEmail(@Body() otpDto: OTPDto) {
@@ -104,7 +90,7 @@ export class UserController {
     return this.userService.verifyPhone(otpDto.code);
   }
 
-  @Post(EEndpointKeys.ToggleBlock)
+  @Post(EEndpointKeys.PostToggleBlock)
   @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
   @RequiredRoles(ERole.Admin)
   async toggleBlock(@Body() blockDto: BlockDto) {
@@ -115,6 +101,20 @@ export class UserController {
   @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
   updateProfile(@Body() profileDto: ProfileDto) {
     return this.userService.updateProfile(profileDto);
+  }
+
+  @Patch(EEndpointKeys.PatchAddRoleToUser)
+  @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
+  @RequiredRoles(ERole.Admin)
+  addRoleToUser(@Body() addRoleToUserDto: AddOrRemoveRoleFromUser) {
+    return this.userService.addRoleToUser(addRoleToUserDto);
+  }
+
+  @Patch(EEndpointKeys.PatchRemoveRoleFromUser)
+  @ApiConsumes(ESwaggerConsumes.UrlEncoded, ESwaggerConsumes.JSON)
+  @RequiredRoles(ERole.Admin)
+  removeRoleFromUser(@Body() removeRoleFromUserDto: AddOrRemoveRoleFromUser) {
+    return this.userService.removeRoleFromUser(removeRoleFromUserDto);
   }
 
   @Patch(EEndpointKeys.PatchChangeEmail)
